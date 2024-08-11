@@ -16,6 +16,7 @@
       : 'https://sam2-download.b-cdn.net/sam2_hiera_tiny.encoder.with_runtime_opt.ort';
 
   function resizeImage(img: HTMLImageElement, ctx: CanvasRenderingContext2D) {
+    currentStatus.set('Resizing image...');
     const scale = Math.min(1024 / img.width, 1024 / img.height);
     const scaledWidth = img.width * scale;
     const scaledHeight = img.height * scale;
@@ -29,6 +30,7 @@
   }
 
   function normalizeImage(imageData: ImageData) {
+    currentStatus.set('Normalizing image...');
     const rgbData = [];
 
     const mean = [0.485, 0.456, 0.406];
@@ -46,6 +48,7 @@
   }
 
   async function fetchModel() {
+    currentStatus.set("Fetching model...")
     const response = await fetch(modelURL, {
       method: 'GET',
       headers: {
@@ -55,41 +58,32 @@
       credentials: 'omit',
     });
 
-    // Check if the response is ok
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // Get the total size of the file
     const totalSize = Number(response.headers.get('Content-Length'));
-
-    // Create a new Uint8Array to store the file contents
     const buffer = new Uint8Array(totalSize);
     let receivedLength = 0;
 
-    // Get the reader from the response body
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error('Failed to get reader for model stream');
     }
-
-    // Read the data
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer.set(value, receivedLength);
       receivedLength += value.length;
-
-      // You can add a progress indicator here if needed
-      // const percentComplete = (receivedLength / totalSize) * 100;
-      // console.log(`Downloaded ${percentComplete.toFixed(2)}%`);
+    
+      // Download progress indicator
+      const percentComplete = (receivedLength / totalSize) * 100;
+      currentStatus.set(`Fetching model, ${percentComplete.toFixed(2)}%`);
     }
 
-    // Create a blob from the buffer
     const blob = new Blob([buffer], { type: 'application/octet-stream' });
 
-    // Convert blob to ArrayBuffer
     const arrayBuffer = await blob.arrayBuffer();
     return arrayBuffer;
   }
@@ -99,13 +93,12 @@
     initialSourceImg = $sourceImage;
     if ($sourceImage) {
       const img = new Image();
-      img.onload = () => {
-        currentStatus.set('Resizing image...');
+      img.onload = async () => {
         ctx = canvas.getContext('2d');
         if (ctx) {
           const imageData = resizeImage(img, ctx);
-          currentStatus.set('Normalizing image...');
           const rgbData = normalizeImage(imageData);
+          await fetchModel();
 
           const tensor = tf.tensor3d(rgbData, [1024, 1024, 3]);
           batchedTensor = tf.tidy(() => {
@@ -137,14 +130,6 @@
     font-family: 'UniversLTStd', sans-serif;
   }
 
-  h1,
-  p {
-    margin: 0;
-  }
-
-  p {
-    margin-top: 20px;
-  }
 
   canvas {
     max-width: 100%;
