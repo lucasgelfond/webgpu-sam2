@@ -30,6 +30,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@tensorflow/tfjs": "^4.20.0",
 		"svelte-file-dropzone": "^2.0.7"
 	}
 }
