@@ -2,8 +2,9 @@
   import FileDropzone from './file-dropzone.svelte';
   import { sourceImage } from '$lib/source-image';
   import { currentStatus } from '$lib/current-status';
-  import { onMount } from 'svelte';
   import * as tf from '@tensorflow/tfjs';
+
+
 
   let canvas: HTMLCanvasElement;
   let ctx;
@@ -88,6 +89,31 @@
     return arrayBuffer;
   }
 
+//   async function runInference(model: ArrayBuffer, batchedTensor: tf.Tensor3D) {
+//     const session = await WEBGPU_INFERENCE_SESSION.create(model, {
+//         executionProviders: ["webgpu"],
+//         graphOptimizationLevel: "disabled",
+//       });
+//       const feeds = {
+//         image: new ONNX_WEBGPU.Tensor(
+//           batchedTensor.dataSync(),
+//           batchedTensor.shape
+//         ),
+//       };
+//       const start = Date.now();
+//       try {
+//         const results = await session.run(feeds);
+//         const end = Date.now();
+//         const time_taken = (end - start) / 1000;
+//         currentStatus.set(`Inference completed in ${time_taken} seconds`);
+//         return results;
+//       }
+//       catch(error) {
+//         console.error(error);
+//         currentStatus.set(`Error running inference: ${error}`);
+//       }
+//   }
+
   // Make sure we run these steps only when the image changes
   $: if ($sourceImage !== initialSourceImg) {
     initialSourceImg = $sourceImage;
@@ -98,14 +124,16 @@
         if (ctx) {
           const imageData = resizeImage(img, ctx);
           const rgbData = normalizeImage(imageData);
-          await fetchModel();
-
           const tensor = tf.tensor3d(rgbData, [1024, 1024, 3]);
           batchedTensor = tf.tidy(() => {
             const transposed = tf.transpose(tensor, [2, 0, 1]);
             return tf.expandDims(transposed, 0);
           });
-          console.log(batchedTensor);
+          const model = await fetchModel();
+          // @ts-ignore
+              await runInference(model, batchedTensor)
+
+
         }
       };
       img.src = $sourceImage;

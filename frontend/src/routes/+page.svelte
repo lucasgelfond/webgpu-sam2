@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import Encoder from '../encoder.svelte';
   import { currentStatus } from '$lib/current-status';
-
   onMount(() => {
     const font = new FontFace('UniversLTStd', 'url(/fonts/UniversLTStd.woff)');
     font.load().then(() => {
