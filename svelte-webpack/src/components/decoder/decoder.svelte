@@ -26,10 +26,10 @@
       x: (canvasRef.width - canvasSize) / 2,
       y: (canvasRef.height - canvasSize) / 2,
     };
-    drawImage();
+    drawImage(canvasRef, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
   }
 
-  $: $inputImageData, drawImage();
+  $: $inputImageData, drawImage(canvasRef, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
 
   function prepareDecodingInputs(encoderOutputs: any, pointCoords: any, pointLabels: any) {
     const { image_embed, high_res_feats_0, high_res_feats_1 } = encoderOutputs;
@@ -52,6 +52,7 @@
     canvasWidth: number,
     canvasHeight: number,
     threshold: number,
+    offset: { x: number; y: number }
   ) {
     const scaleX = canvasWidth / maskWidth;
     const scaleY = canvasHeight / maskHeight;
@@ -92,6 +93,8 @@
     maskWidth: number,
     maskHeight: number,
     threshold: number,
+    canvasSize: number,
+    offset: { x: number; y: number }
   ) {
     const imageData = context.getImageData(offset.x, offset.y, canvasSize, canvasSize);
     const scaleX = canvasSize / maskWidth;
@@ -128,7 +131,7 @@
     context.putImageData(imageData, offset.x, offset.y);
   }
 
-  function postProcessMasks(masks: any, threshold: number): Float32Array[] {
+  function postProcessMasks(masks: any, threshold: number, originalSize: number): Float32Array[] {
     const { data, dims } = masks;
     const numMasks = dims[1];
     const maskWidth = dims[2];
@@ -136,13 +139,13 @@
     const processedMasks: Float32Array[] = [];
 
     for (let i = 0; i < numMasks; i++) {
-      const mask = new Float32Array(ORIGINAL_SIZE * ORIGINAL_SIZE);
-      for (let y = 0; y < ORIGINAL_SIZE; y++) {
-        for (let x = 0; x < ORIGINAL_SIZE; x++) {
-          const maskX = Math.floor((x * maskWidth) / ORIGINAL_SIZE);
-          const maskY = Math.floor((y * maskHeight) / ORIGINAL_SIZE);
+      const mask = new Float32Array(originalSize * originalSize);
+      for (let y = 0; y < originalSize; y++) {
+        for (let x = 0; x < originalSize; x++) {
+          const maskX = Math.floor((x * maskWidth) / originalSize);
+          const maskY = Math.floor((y * maskHeight) / originalSize);
           const maskIndex = maskY * maskWidth + maskX + i * maskWidth * maskHeight;
-          mask[y * ORIGINAL_SIZE + x] = data[maskIndex] > threshold ? 1 : 0;
+          mask[y * originalSize + x] = data[maskIndex] > threshold ? 1 : 0;
         }
       }
       processedMasks.push(mask);
@@ -166,7 +169,7 @@
     const context = canvasRef.getContext('2d');
     if (!context) return;
 
-    drawImage();
+    drawImage(canvasRef, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
     context.fillStyle = 'rgba(0, 0, 139, 0.7)'; // Dark blue with some transparency
     context.fillRect(x * scale + offset.x - 1, y * scale + offset.y - 1, 2, 2); // Smaller 2x2 pixel
 
@@ -190,7 +193,7 @@
       const time_taken = (stop - start) / 1000;
       currentStatus.set(`Inference completed in ${time_taken} seconds`);
 
-      const postProcessedMasks = postProcessMasks(masks, maskThreshold / 10);
+      const postProcessedMasks = postProcessMasks(masks, maskThreshold / 10, ORIGINAL_SIZE);
 
       const colors = [
         [0, 0, 139], // Dark blue
@@ -207,6 +210,8 @@
           ORIGINAL_SIZE,
           ORIGINAL_SIZE,
           0.5,
+          canvasSize,
+          offset
         );
       }
 
@@ -219,6 +224,7 @@
           canvasSize,
           canvasSize,
           0.5,
+          offset
         );
       }
 
@@ -229,8 +235,14 @@
     }
   }
 
-  function drawImage() {
-    if (!canvasRef || !$inputImageData) return;
+  function drawImage(
+    canvasRef: HTMLCanvasElement,
+    inputImageData: ImageData,
+    originalSize: number,
+    canvasSize: number,
+    offset: { x: number; y: number }
+  ) {
+    if (!canvasRef || !inputImageData) return;
     const context = canvasRef.getContext('2d');
     if (!context) return;
 
@@ -238,12 +250,12 @@
     context.fillRect(0, 0, canvasRef.width, canvasRef.height);
 
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = ORIGINAL_SIZE;
-    tempCanvas.height = ORIGINAL_SIZE;
+    tempCanvas.width = originalSize;
+    tempCanvas.height = originalSize;
     const tempContext = tempCanvas.getContext('2d');
 
-    createImageBitmap($inputImageData).then((imageBitmap) => {
-      tempContext.drawImage(imageBitmap, 0, 0, ORIGINAL_SIZE, ORIGINAL_SIZE);
+    createImageBitmap(inputImageData).then((imageBitmap) => {
+      tempContext.drawImage(imageBitmap, 0, 0, originalSize, originalSize);
       context.drawImage(tempCanvas, offset.x, offset.y, canvasSize, canvasSize);
     });
   }

@@ -39,7 +39,7 @@
     const ctx = canvas.getContext('2d');
 
     if (ctx) {
-      const scale = Math.max(1024 / img.width, 1024 / img.height);
+      const scale = Math.min(1024 / img.width, 1024 / img.height);
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
       const x = (1024 - scaledWidth) / 2;
@@ -52,6 +52,7 @@
       const imageData = ctx.getImageData(0, 0, 1024, 1024);
       // Update inputImageData to notify subscribers
       inputImageData.update((current => imageData));
+      
       const rgbData = [];
 
       const mean = [0.485, 0.456, 0.406];
