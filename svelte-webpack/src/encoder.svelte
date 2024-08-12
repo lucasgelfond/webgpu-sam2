@@ -26,7 +26,18 @@
 
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, 1024, 1024);
-    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    const fadeInTime = 1000; // in ms
+
+    let opacity = 0;
+    const fadeIn = setInterval(() => {
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+      opacity += 0.01;
+      if (opacity >= 1) {
+        clearInterval(fadeIn);
+        ctx.globalAlpha = 1;
+      }
+    }, fadeInTime/100);
     return ctx.getImageData(0, 0, 1024, 1024);
   }
 
@@ -105,7 +116,7 @@
         const results = await session.run(feeds);
         const end = Date.now();
         const time_taken = (end - start) / 1000;
-        currentStatus.set(`Inference completed in ${time_taken} seconds`);
+        currentStatus.set(`Embedding completed in ${time_taken} seconds`);
         return results;
       }
       catch(error) {
