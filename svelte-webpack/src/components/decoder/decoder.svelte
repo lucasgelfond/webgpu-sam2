@@ -13,7 +13,7 @@
 
   const ORIGINAL_SIZE = 1024;
   let canvas: HTMLCanvasElement;
-  let maskThreshold = 0;
+  let maskThreshold = 1.5;
   let canvasSize: number;
   let scale: number;
   let offset: { x: number; y: number };
