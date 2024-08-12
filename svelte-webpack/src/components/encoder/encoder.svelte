@@ -65,7 +65,7 @@
     <select id="modelSize" bind:value={$modelSize}>
       <option value="tiny">Tiny</option>
       <option value="small">Small</option>
-      <option value="base_plus">Base Plus</option>
+      <option value="base_plus">Base Plus (recommended)</option>
     </select>
   </div>
   <div
@@ -82,7 +82,7 @@
   </div>
 {:else}
   <div>
-    <span>Model Size: {$modelSize}</span>
+    <span><strong>Model Size</strong>: {$modelSize}</span>
   </div>
 {/if}
 <img bind:this={imageElement} alt="Uploaded" style="display: none;" />
