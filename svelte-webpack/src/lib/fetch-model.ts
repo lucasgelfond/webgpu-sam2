@@ -1,30 +1,43 @@
 import { currentStatus } from './current-status';
 
+const baseURL =
+  'https://raw.githubusercontent.com/lucasgelfond/webgpu-sam2/raw/main/svelte-webpack/models';
+
+const TINY = 'sam2_hiera_tiny';
+const SMALL = 'sam2_hiera_small';
+const BASE_PLUS = 'sam2_hiera_base_plus';
+const ENCODER_PART = 'encoder.with_runtime_opt.part';
+
 // break some models up into 50mb chunks to subvert GitHub's 100mb file limit
 const modelDictionary = {
   encoder: {
     tiny: {
-      links: ['https://sam2-download.b-cdn.net/sam2_hiera_tiny.encoder.with_runtime_opt.ort'],
-      totalSize: 134451120,
+      links: [`${TINY}.${ENCODER_PART}1.ort`, `${TINY}.${ENCODER_PART}2.ort`],
+      fileTotalBytes: 134451120,
     },
     small: {
-      links: ['https://sam2-download.b-cdn.net/sam2_hiera_small.encoder.with_runtime_opt.ort'],
-      totalSize: 162929584,
+      links: [`${SMALL}.${ENCODER_PART}1.ort`, `${SMALL}.${ENCODER_PART}2.ort`],
+      fileTotalBytes: 162929584,
     },
     base_plus: {
-      links: [''],
-      totalSize: 306394720,
+      links: [
+        `${BASE_PLUS}.${ENCODER_PART}1.ort`,
+        `${BASE_PLUS}.${ENCODER_PART}2.ort`,
+        `${BASE_PLUS}.${ENCODER_PART}3.ort`,
+        `${BASE_PLUS}.${ENCODER_PART}4.ort`,
+      ],
+      fileTotalBytes: 306394720,
     },
   },
   decoder: {
     tiny: {
-      links: ['https://sam2-download.b-cdn.net/sam2_hiera_tiny.decoder.onnx'],
+      links: [`${TINY}.decoder.onnx`],
     },
     small: {
-      links: ['https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx'],
+      links: [`${SMALL}.decoder.onnx`],
     },
     base_plus: {
-      links: [''],
+      links: [`${BASE_PLUS}.decoder.onnx`],
     },
   },
 };
@@ -58,9 +71,28 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
     let fetchedModel;
     const modelLinks = modelDictionary[modelName][modelSize].links;
     if (modelLinks.length == 1) {
-      fetchedModel = await fetchModelFromInternet(modelLinks[0], `{modelName}-${modelSize}`);
+      fetchedModel = await fetchModelFromInternet(
+        // i.e. https://github.com/lucasgelfond/webgpu-sam2/raw/main/svelte-webpack/models/sam2_hiera_tiny.decoder.onnx
+        `${baseURL}/${modelLinks[0]}`,
+        // i.e. decoder-tiny
+        `{modelName}-${modelSize}`,
+      );
     } else {
-      // TK
+      console.log(`Fetching multi-part model for ${modelName}-${modelSize} from internet`);
+      const totalBytes = modelDictionary[modelName][modelSize].fileTotalBytes;
+      fetchedModel = new ArrayBuffer(totalBytes);
+      let offset = 0;
+
+      for (const link of modelLinks) {
+        const partUrl = `${baseURL}/${link}`;
+        const partData = await fetchModelFromInternet(partUrl, `${modelName}-${modelSize}-part`);
+
+        new Uint8Array(fetchedModel).set(new Uint8Array(partData), offset);
+        offset += partData.byteLength;
+
+        console.log(`Fetched and appended part ${link}`);
+      }
+      console.log(`Completed fetching all parts for ${modelName}-${modelSize}`);
     }
     // Save to origin private file system
     try {

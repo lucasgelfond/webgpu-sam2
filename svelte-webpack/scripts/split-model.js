@@ -26,6 +26,8 @@ modelSizes.forEach((size) => {
 
   // Save chunks to disk
   chunks.forEach((chunk, index) => {
+    // NOTE - you'll need to manually rename these so it's .part1.ort vs. .ort.part1
+    // Fixable here but in a rush so no chance to test the change / it's only a few files
     const chunkName = `${fileName}.part${index + 1}`;
     fs.writeFileSync(path.join(outputDir, chunkName), chunk);
   });
