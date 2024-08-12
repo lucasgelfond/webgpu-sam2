@@ -100,6 +100,7 @@
     border-radius: 10px;
     display: flex;
     align-items: center;
+    padding: 20px;
     justify-content: center;
     text-align: center;
     color: #ccc;
