@@ -28,7 +28,9 @@
   };
 
   const handleImage = async (img: HTMLImageElement) => {
-    currentStatus.set(`Uploaded image is ${img.width}x${img.height}px. Loading the encoder model (~28 MB).`);
+    currentStatus.set(
+      `Uploaded image is ${img.width}x${img.height}px. Loading the encoder model (~28 MB).`,
+    );
     isLoading = true;
 
     const canvas = document.createElement('canvas');
@@ -72,9 +74,9 @@
       const url = isUsingMobileSam
         ? 'https://sam2-download.b-cdn.net/models/mobilesam.encoder.onnx'
         : 'https://sam2-download.b-cdn.net/sam2_hiera_small.encoder.with_runtime_opt.ort';
-      
+
       try {
-        const model = await fetchModel(url, "encoder");
+        const model = await fetchModel(url, 'encoder');
         const session = await ONNX_WEBGPU.InferenceSession.create(model, {
           executionProviders: ['webgpu'],
           graphOptimizationLevel: 'disabled',
@@ -89,12 +91,14 @@
         const end = Date.now();
         const time_taken = (end - start) / 1000;
 
-        console.log({results})
+        console.log({ results });
         // Update encoderOutput to notify subscribers
-        encoderOutput.update(current => ({...current, ...results}));
+        encoderOutput.update((current) => ({ ...current, ...results }));
 
         inputImageData.set(imageData);
-        currentStatus.set(`Embedding generated in ${time_taken} seconds. Click on the image to generate a mask.`);
+        currentStatus.set(
+          `Embedding generated in ${time_taken} seconds. Click on the image to generate a mask.`,
+        );
       } catch (error) {
         console.error(error);
         currentStatus.set(`Error: ${error}`);
@@ -113,7 +117,7 @@
 
 <div>
   <input type="file" on:change={handleFileChange} />
-  <img bind:this={imageElement} alt="Uploaded" style="display: none;"/>
+  <img bind:this={imageElement} alt="Uploaded" style="display: none;" />
   {#if isLoading}
     <div class="spinner">
       <div class="loader"></div>
@@ -139,7 +143,11 @@
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>

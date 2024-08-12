@@ -1,6 +1,4 @@
 <script lang="ts">
-
-
   interface FileEvent {
     target: {
       files: FileList;
@@ -42,8 +40,6 @@
 />
 
 <style>
-
-
   :global(label[for='file-upload']) {
     border: 2px dashed #cccccc;
     border-radius: 4px;

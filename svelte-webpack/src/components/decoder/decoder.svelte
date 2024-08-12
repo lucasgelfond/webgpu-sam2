@@ -3,7 +3,7 @@
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
   import { currentStatus } from '../../lib/current-status';
-  import { encoderOutput } from '../../lib/encoder-output'; 
+  import { encoderOutput } from '../../lib/encoder-output';
   import { inputImageData } from '../../lib/input-image-data';
   import fetchModel from '../../lib/fetch-model';
 
@@ -13,27 +13,23 @@
   let maskThreshold = 2;
   let canvasSize: number;
   let scale: number;
-  let offset: { x: number, y: number };
+  let offset: { x: number; y: number };
 
   $: modelURL = isUsingMobileSam
-    ? "https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx"
-    : "https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx";
+    ? 'https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx'
+    : 'https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx';
 
   $: if (canvasRef) {
     canvasSize = Math.min(canvasRef.width, canvasRef.height);
     scale = canvasSize / ORIGINAL_SIZE;
     offset = {
       x: (canvasRef.width - canvasSize) / 2,
-      y: (canvasRef.height - canvasSize) / 2
+      y: (canvasRef.height - canvasSize) / 2,
     };
     drawImage();
   }
 
-  function prepareDecodingInputs(
-    encoderOutputs: any,
-    pointCoords: any,
-    pointLabels: any
-  ) {
+  function prepareDecodingInputs(encoderOutputs: any, pointCoords: any, pointLabels: any) {
     const { image_embed, high_res_feats_0, high_res_feats_1 } = encoderOutputs;
     return {
       image_embed,
@@ -41,10 +37,7 @@
       high_res_feats_1,
       point_coords: pointCoords,
       point_labels: pointLabels,
-      mask_input: new ONNX_WEBGPU.Tensor(
-        new Float32Array(256 * 256),
-        [1, 1, 256, 256]
-      ),
+      mask_input: new ONNX_WEBGPU.Tensor(new Float32Array(256 * 256), [1, 1, 256, 256]),
       has_mask_input: new ONNX_WEBGPU.Tensor(new Float32Array([0]), [1]),
     };
   }
@@ -56,12 +49,12 @@
     maskHeight: number,
     canvasWidth: number,
     canvasHeight: number,
-    threshold: number
+    threshold: number,
   ) {
     const scaleX = canvasWidth / maskWidth;
     const scaleY = canvasHeight / maskHeight;
     context.beginPath();
-    context.strokeStyle = "white";
+    context.strokeStyle = 'white';
     context.lineWidth = 2;
 
     for (let y = 0; y < maskHeight; y++) {
@@ -96,7 +89,7 @@
     alpha: number,
     maskWidth: number,
     maskHeight: number,
-    threshold: number
+    threshold: number,
   ) {
     const imageData = context.getImageData(offset.x, offset.y, canvasSize, canvasSize);
     const scaleX = canvasSize / maskWidth;
@@ -114,9 +107,15 @@
           for (let py = startY; py < endY; py++) {
             for (let px = startX; px < endX; px++) {
               const index = (py * canvasSize + px) * 4;
-              imageData.data[index] = Math.floor((1 - alpha) * imageData.data[index] + alpha * color[0]);
-              imageData.data[index + 1] = Math.floor((1 - alpha) * imageData.data[index + 1] + alpha * color[1]);
-              imageData.data[index + 2] = Math.floor((1 - alpha) * imageData.data[index + 2] + alpha * color[2]);
+              imageData.data[index] = Math.floor(
+                (1 - alpha) * imageData.data[index] + alpha * color[0],
+              );
+              imageData.data[index + 1] = Math.floor(
+                (1 - alpha) * imageData.data[index + 1] + alpha * color[1],
+              );
+              imageData.data[index + 2] = Math.floor(
+                (1 - alpha) * imageData.data[index + 2] + alpha * color[2],
+              );
               imageData.data[index + 3] = 255;
             }
           }
@@ -140,7 +139,7 @@
         for (let x = 0; x < ORIGINAL_SIZE; x++) {
           const maskX = Math.floor((x * maskWidth) / ORIGINAL_SIZE);
           const maskY = Math.floor((y * maskHeight) / ORIGINAL_SIZE);
-          const maskIndex = (maskY * maskWidth + maskX) + (i * maskWidth * maskHeight);
+          const maskIndex = maskY * maskWidth + maskX + i * maskWidth * maskHeight;
           mask[y * ORIGINAL_SIZE + x] = data[maskIndex] > threshold ? 1 : 0;
         }
       }
@@ -157,15 +156,17 @@
     const x = (event.clientX - rect.left - offset.x) / scale;
     const y = (event.clientY - rect.top - offset.y) / scale;
 
-    console.log("Clicked position:", x, y);
-    currentStatus.set(`Clicked on (${x}, ${y}). Downloading the decoder model if needed and generating masks...`);
+    console.log('Clicked position:', x, y);
+    currentStatus.set(
+      `Clicked on (${x}, ${y}). Downloading the decoder model if needed and generating masks...`,
+    );
 
-    const context = canvasRef.getContext("2d");
+    const context = canvasRef.getContext('2d');
     if (!context) return;
 
     drawImage();
-    context.fillStyle = "rgba(0, 0, 139, 0.7)";  // Dark blue with some transparency
-    context.fillRect(x * scale + offset.x - 1, y * scale + offset.y - 1, 2, 2);  // Smaller 2x2 pixel
+    context.fillStyle = 'rgba(0, 0, 139, 0.7)'; // Dark blue with some transparency
+    context.fillRect(x * scale + offset.x - 1, y * scale + offset.y - 1, 2, 2); // Smaller 2x2 pixel
 
     const inputPointCoords = new Float32Array([x, y, 0, 0]);
     const inputPointLabels = new Float32Array([1, -1]);
@@ -173,16 +174,12 @@
     const pointLabels = new ONNX_WEBGPU.Tensor(inputPointLabels, [1, 2]);
 
     try {
-      const decoderModel = await fetchModel(modelURL, "decoder");
+      const decoderModel = await fetchModel(modelURL, 'decoder');
       const decodingSession = await ONNX_WEBGPU.InferenceSession.create(decoderModel, {
-        executionProviders: ["webgpu"],
+        executionProviders: ['webgpu'],
       });
       // @ts-ignore
-      const decodingFeeds = prepareDecodingInputs(
-        $encoderOutput,
-        pointCoords,
-        pointLabels
-      );
+      const decodingFeeds = prepareDecodingInputs($encoderOutput, pointCoords, pointLabels);
       console.log({ decodingFeeds });
       const start = Date.now();
       const results = await decodingSession.run(decodingFeeds);
@@ -194,9 +191,9 @@
       const postProcessedMasks = postProcessMasks(masks, maskThreshold / 10);
 
       const colors = [
-        [0, 0, 139],  // Dark blue
-        [0, 139, 0],  // Dark green
-        [139, 0, 0],  // Dark red
+        [0, 0, 139], // Dark blue
+        [0, 139, 0], // Dark green
+        [139, 0, 0], // Dark red
       ];
 
       for (let i = 0; i < postProcessedMasks.length; i++) {
@@ -207,7 +204,7 @@
           0.3,
           ORIGINAL_SIZE,
           ORIGINAL_SIZE,
-          0.5
+          0.5,
         );
       }
 
@@ -219,12 +216,12 @@
           ORIGINAL_SIZE,
           canvasSize,
           canvasSize,
-          0.5
+          0.5,
         );
       }
 
-      console.log("Masks drawn:", postProcessedMasks.length);
-    } catch(error) {
+      console.log('Masks drawn:', postProcessedMasks.length);
+    } catch (error) {
       console.error(error);
       currentStatus.set(`Error running inference: ${error}`);
     }
@@ -232,10 +229,10 @@
 
   function drawImage() {
     if (!canvasRef || !$inputImageData) return;
-    const context = canvasRef.getContext("2d");
+    const context = canvasRef.getContext('2d');
     if (!context) return;
 
-    context.fillStyle = "#f0f0f0";
+    context.fillStyle = '#f0f0f0';
     context.fillRect(0, 0, canvasRef.width, canvasRef.height);
 
     const tempCanvas = document.createElement('canvas');
@@ -243,7 +240,7 @@
     tempCanvas.height = ORIGINAL_SIZE;
     const tempContext = tempCanvas.getContext('2d');
 
-    createImageBitmap($inputImageData).then(imageBitmap => {
+    createImageBitmap($inputImageData).then((imageBitmap) => {
       tempContext.drawImage(imageBitmap, 0, 0, ORIGINAL_SIZE, ORIGINAL_SIZE);
       context.drawImage(tempCanvas, offset.x, offset.y, canvasSize, canvasSize);
     });
@@ -266,17 +263,10 @@
 </script>
 
 <div class="container">
-  <canvas bind:this={canvasRef} on:click={handleClick}/>
+  <canvas bind:this={canvasRef} on:click={handleClick} />
   <div>
     <label for="threshold">Mask Threshold: </label>
-    <input
-      type="range"
-      id="threshold"
-      min="0"
-      max="20"
-      step="0.1"
-      bind:value={maskThreshold}
-    />
+    <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
     <span>{maskThreshold}</span>
   </div>
 </div>
@@ -295,4 +285,3 @@
     height: 100%;
   }
 </style>
-
