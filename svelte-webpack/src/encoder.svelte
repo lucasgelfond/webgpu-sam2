@@ -2,11 +2,12 @@
   import FileDropzone from './file-dropzone.svelte';
   import { sourceImage } from './lib/source-image';
   import { currentStatus } from './lib/current-status';
-  import { encoderOutput } from './lib/encoder-output'; 
+  import { encoderOutput } from './lib/encoder-output';
+  import {inputImageData} from './lib/input-image-data';
   import * as tf from '@tensorflow/tfjs';
+  //@ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
   import fetchModel from './lib/fetch-model';
-
 
   let canvas: HTMLCanvasElement;
   let ctx;
@@ -39,7 +40,7 @@
         clearInterval(fadeIn);
         ctx.globalAlpha = 1;
       }
-    }, fadeInTime/100);
+    }, fadeInTime / 100);
     return ctx.getImageData(0, 0, 1024, 1024);
   }
 
@@ -61,30 +62,32 @@
     return rgbData;
   }
 
-
   async function runInference(model: ArrayBuffer, batchedTensor: tf.Tensor3D) {
     const session = await ONNX_WEBGPU.InferenceSession.create(model, {
-        executionProviders: ["webgpu"],
-        graphOptimizationLevel: "disabled",
-      });
-      const feeds = {
-        image: new ONNX_WEBGPU.Tensor(
-          batchedTensor.dataSync(),
-          batchedTensor.shape
-        ),
-      };
-      const start = Date.now();
-      try {
-        const results = await session.run(feeds);
-        const end = Date.now();
-        const time_taken = (end - start) / 1000;
-        currentStatus.set(`Embedding completed in ${time_taken} seconds`);
-        return results;
-      }
-      catch(error) {
-        console.error(error);
-        currentStatus.set(`Error running inference: ${error}`);
-      }
+      executionProviders: ['webgpu'],
+      graphOptimizationLevel: 'disabled',
+    });
+    const feeds = {
+      image: new ONNX_WEBGPU.Tensor(batchedTensor.dataSync(), batchedTensor.shape),
+    };
+    const start = Date.now();
+    try {
+      const results = await session.run(feeds);
+      const end = Date.now();
+      const time_taken = (end - start) / 1000;
+      currentStatus.set(`Embedding completed in ${time_taken} seconds`);
+      encoderOutput.set({
+        imageEmbeddings: new Float32Array(results.imageEmbeddings),
+        highResFeats: {
+          high_res_feats_0: results.high_res_feats_0,
+          high_res_feats_1: results.high_res_feats_1,
+        },
+      })
+      return results;
+    } catch (error) {
+      console.error(error);
+      currentStatus.set(`Error running inference: ${error}`);
+    }
   }
 
   // Make sure we run these steps only when the image changes
@@ -96,6 +99,7 @@
         ctx = canvas.getContext('2d');
         if (ctx) {
           const imageData = resizeImage(img, ctx);
+          inputImageData.set(imageData);
           const rgbData = normalizeImage(imageData);
           const tensor = tf.tensor3d(rgbData, [1024, 1024, 3]);
           batchedTensor = tf.tidy(() => {
@@ -104,7 +108,7 @@
           });
           const model = await fetchModel(modelURL, 'encoder');
           // @ts-ignore
-          const inferenceResults = await runInference(model, batchedTensor)
+          const inferenceResults = await runInference(model, batchedTensor);
           encoderOutput.set(inferenceResults);
         }
       };
@@ -126,10 +130,8 @@
   .container {
     display: flex;
     flex-direction: column;
-    padding: 20px;
     font-family: 'UniversLTStd', sans-serif;
   }
-
 
   canvas {
     max-width: 100%;
