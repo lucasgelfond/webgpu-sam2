@@ -2,10 +2,10 @@
   import { onMount } from 'svelte';
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
-  import { currentStatus } from './lib/current-status';
-  import { encoderOutput } from './lib/encoder-output'; 
-  import { inputImageData } from './lib/input-image-data';
-  import fetchModel from './lib/fetch-model';
+  import { currentStatus } from '../../lib/current-status';
+  import { encoderOutput } from '../../lib/encoder-output'; 
+  import { inputImageData } from '../../lib/input-image-data';
+  import fetchModel from '../../lib/fetch-model';
 
   export let isUsingMobileSam: boolean = false;
   const ORIGINAL_SIZE = 1024;
@@ -295,3 +295,5 @@
     height: 100%;
   }
 </style>
+
+export default as decoder;

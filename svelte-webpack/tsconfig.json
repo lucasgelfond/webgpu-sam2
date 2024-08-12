@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*", "webpack.config.ts"],
+  "include": ["src/**/*", "webpack.config.ts", "svelte.d.ts"],
   "exclude": ["node_modules/*", "__sapper__/*", "public/*"],
   "compilerOptions": {
     "moduleResolution": "node",
