@@ -31,6 +31,7 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
   currentStatus.set(`Getting ${modelName}-${modelSize} model...`);
   let cachedModel;
 
+  // Look in origin private file system.
   try {
     const root = await navigator.storage.getDirectory();
     const modelFile = await root.getFileHandle(modelName, { create: false });
@@ -52,6 +53,7 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
     } else {
       // TK
     }
+    // Save to origin private file system
     try {
       const root = await navigator.storage.getDirectory();
       const modelFile = await root.getFileHandle(modelName, { create: true });
@@ -68,7 +70,7 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
 }
 
 async function fetchModelFromInternet(modelURL: string, modelName: string) {
-  currentStatus.set(`Fetching ${modelName} model..."`);
+  console.log(`Fetching ${modelName} model..."`);
   const response = await fetch(modelURL, {
     method: 'GET',
     headers: {
