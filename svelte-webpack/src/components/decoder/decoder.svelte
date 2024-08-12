@@ -29,6 +29,8 @@
     drawImage();
   }
 
+  $: $inputImageData, drawImage();
+
   function prepareDecodingInputs(encoderOutputs: any, pointCoords: any, pointLabels: any) {
     const { image_embed, high_res_feats_0, high_res_feats_1 } = encoderOutputs;
     return {

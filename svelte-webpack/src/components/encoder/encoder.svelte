@@ -12,14 +12,14 @@
   let isLoading = false;
   let isUsingMobileSam = false;
 
-  const handleFileChange = (event: Event) => {
+  const handleFileChange = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     const files = input.files;
     if (FileReader && files && files.length) {
       const fileReader = new FileReader();
       fileReader.onload = () => {
         if (imageElement) {
-          imageElement.onload = () => handleImage(imageElement);
+          imageElement.onload = async () => await handleImage(imageElement);
           imageElement.src = fileReader.result as string;
         }
       };
@@ -50,6 +50,8 @@
       ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
 
       const imageData = ctx.getImageData(0, 0, 1024, 1024);
+      // Update inputImageData to notify subscribers
+      inputImageData.update((current => imageData));
       const rgbData = [];
 
       const mean = [0.485, 0.456, 0.406];
@@ -118,36 +120,8 @@
 <div>
   <input type="file" on:change={handleFileChange} />
   <img bind:this={imageElement} alt="Uploaded" style="display: none;" />
-  {#if isLoading}
-    <div class="spinner">
-      <div class="loader"></div>
-    </div>
-  {/if}
 </div>
 
 <style>
-  .spinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px;
-  }
-
-  .loader {
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #3498db;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+ 
 </style>
