@@ -7,6 +7,7 @@
   import { inputImageData } from '../../lib/input-image-data';
   import fetchModel from '../../lib/fetch-model';
   import scaleAndProcessMasks from './utils/scale-and-process-masks';
+  import drawContour from './utils/draw-contour';
 
   export let isUsingMobileSam: boolean = false;
   const ORIGINAL_SIZE = 1024;
@@ -43,47 +44,6 @@
       mask_input: new ONNX_WEBGPU.Tensor(new Float32Array(256 * 256), [1, 1, 256, 256]),
       has_mask_input: new ONNX_WEBGPU.Tensor(new Float32Array([0]), [1]),
     };
-  }
-
-  function drawContour(
-    context: CanvasRenderingContext2D,
-    mask: Float32Array,
-    maskWidth: number,
-    maskHeight: number,
-    canvasWidth: number,
-    canvasHeight: number,
-    threshold: number,
-    offset: { x: number; y: number }
-  ) {
-    const scaleX = canvasWidth / maskWidth;
-    const scaleY = canvasHeight / maskHeight;
-    context.beginPath();
-    context.strokeStyle = 'white';
-    context.lineWidth = 2;
-
-    for (let y = 0; y < maskHeight; y++) {
-      for (let x = 0; x < maskWidth; x++) {
-        const i = y * maskWidth + x;
-        if (mask[i] > threshold) {
-          const hasLowerNeighbor =
-            (x > 0 && mask[i - 1] <= threshold) ||
-            (x < maskWidth - 1 && mask[i + 1] <= threshold) ||
-            (y > 0 && mask[i - maskWidth] <= threshold) ||
-            (y < maskHeight - 1 && mask[i + maskWidth] <= threshold);
-
-          if (hasLowerNeighbor) {
-            const canvasX = x * scaleX + offset.x;
-            const canvasY = y * scaleY + offset.y;
-            context.moveTo(canvasX, canvasY);
-            context.lineTo(canvasX + scaleX, canvasY);
-            context.lineTo(canvasX + scaleX, canvasY + scaleY);
-            context.lineTo(canvasX, canvasY + scaleY);
-            context.lineTo(canvasX, canvasY);
-          }
-        }
-      }
-    }
-    context.stroke();
   }
 
   function drawMask(
@@ -128,10 +88,8 @@
         }
       }
     }
-
     context.putImageData(imageData, offset.x, offset.y);
   }
-
 
 
   async function handleClick(event: MouseEvent) {
@@ -199,8 +157,6 @@
         drawContour(
           context,
           postProcessedMasks[i],
-          ORIGINAL_SIZE,
-          ORIGINAL_SIZE,
           canvasSize,
           canvasSize,
           0.5,
