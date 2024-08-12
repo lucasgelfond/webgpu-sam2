@@ -47,6 +47,10 @@
   }
 
   onMount(() => {
+    const font = new FontFace('UniversLTStd', 'url(/public/fonts/UniversLTStd.woff)');
+    font.load().then(() => {
+      document.fonts.add(font);
+    });
     if (imageElement) {
       imageElement.style.display = 'none';
     }
@@ -80,9 +84,13 @@
     justify-content: center;
     text-align: center;
     color: #ccc;
-    font-size: 1.2em;
+    font-size: 1em;
     transition: border-color 0.3s ease-in-out;
     cursor: pointer;
+    margin-top: 20px;
+    max-width: 700px;
+    font-family: 'UniversLTStd', sans-serif;
+
   }
 
   .dropzone:hover {

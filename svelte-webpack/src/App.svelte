@@ -27,15 +27,16 @@
 <style>
   @font-face {
     font-family: 'UniversLTStd';
-    src: url('/public/fonts/UniversLTStd.woff') format('woff');
+    src: url('/fonts/UniversLTStd.woff') format('woff');
     font-weight: normal;
     font-style: normal;
   }
 
   .container {
-    padding: 200px;
+    padding: 100px;
     display: flex;
     flex-direction: column;
+    max-width: 700px;
     font-family: 'UniversLTStd', sans-serif;
   }
 
