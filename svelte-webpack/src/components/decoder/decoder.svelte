@@ -6,6 +6,7 @@
   import { encoderOutput } from '../../lib/encoder-output';
   import { inputImageData } from '../../lib/input-image-data';
   import fetchModel from '../../lib/fetch-model';
+  import scaleAndProcessMasks from './utils/scale-and-process-masks';
 
   export let isUsingMobileSam: boolean = false;
   const ORIGINAL_SIZE = 1024;
@@ -131,28 +132,7 @@
     context.putImageData(imageData, offset.x, offset.y);
   }
 
-  function postProcessMasks(masks: any, threshold: number, originalSize: number): Float32Array[] {
-    const { data, dims } = masks;
-    const numMasks = dims[1];
-    const maskWidth = dims[2];
-    const maskHeight = dims[3];
-    const processedMasks: Float32Array[] = [];
 
-    for (let i = 0; i < numMasks; i++) {
-      const mask = new Float32Array(originalSize * originalSize);
-      for (let y = 0; y < originalSize; y++) {
-        for (let x = 0; x < originalSize; x++) {
-          const maskX = Math.floor((x * maskWidth) / originalSize);
-          const maskY = Math.floor((y * maskHeight) / originalSize);
-          const maskIndex = maskY * maskWidth + maskX + i * maskWidth * maskHeight;
-          mask[y * originalSize + x] = data[maskIndex] > threshold ? 1 : 0;
-        }
-      }
-      processedMasks.push(mask);
-    }
-
-    return processedMasks;
-  }
 
   async function handleClick(event: MouseEvent) {
     if (!canvas || !$inputImageData || !$encoderOutput) return;
@@ -193,7 +173,7 @@
       const time_taken = (stop - start) / 1000;
       currentStatus.set(`Inference completed in ${time_taken} seconds`);
 
-      const postProcessedMasks = postProcessMasks(masks, maskThreshold / 10, ORIGINAL_SIZE);
+      const postProcessedMasks = scaleAndProcessMasks(masks, maskThreshold / 10);
 
       const colors = [
         [0, 0, 139], // Dark blue
