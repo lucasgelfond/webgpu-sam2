@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
-  import { currentStatus, encoderOutput, inputImageData, fetchModel } from 'src/lib';
+  import { currentStatus, encoderOutput, inputImageData, fetchModel, modelSize } from 'src/lib';
   import {
     drawContour,
     drawImage,
@@ -71,7 +71,7 @@
     const pointLabels = new ONNX_WEBGPU.Tensor(inputPointLabels, [1, 2]);
 
     try {
-      const decoderModel = await fetchModel({ isEncoder: false, modelSize: 'small' });
+      const decoderModel = await fetchModel({ isEncoder: false, modelSize: $modelSize });
       const decodingSession = await ONNX_WEBGPU.InferenceSession.create(decoderModel, {
         executionProviders: ['webgpu'],
       });
