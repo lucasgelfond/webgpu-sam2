@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import Encoder from './encoder.svelte';
+  import Encoder from './components/encoder';
   import Decoder from './components/decoder';
   import { currentStatus } from './lib/current-status';
   onMount(() => {

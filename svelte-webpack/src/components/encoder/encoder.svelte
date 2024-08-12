@@ -3,10 +3,10 @@
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
   import * as tf from '@tensorflow/tfjs';
-  import { currentStatus } from './lib/current-status';
-  import { encoderOutput } from './lib/encoder-output';
-  import { inputImageData } from './lib/input-image-data';
-  import fetchModel from './lib/fetch-model';
+  import { currentStatus } from '../../lib/current-status';
+  import { encoderOutput } from '../../lib/encoder-output';
+  import { inputImageData } from '../../lib/input-image-data';
+  import fetchModel from '../../lib/fetch-model';
 
   let imageRef: HTMLImageElement;
   let isLoading = false;
@@ -151,3 +151,5 @@
     100% { transform: rotate(360deg); }
   }
 </style>
+
+export default as encoder;

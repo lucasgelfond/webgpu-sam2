@@ -1,9 +1,5 @@
 <script lang="ts">
-  import { sourceImage } from './lib/source-image';
 
-  function addNewImage(newImage) {
-    $sourceImage = newImage;
-  }
 
   interface FileEvent {
     target: {
@@ -30,7 +26,7 @@
       const fileReader = new FileReader();
       fileReader.onload = () => {
         if (fileReader.result) {
-          addNewImage(fileReader.result as string);
+          // addNewImage(fileReader.result as string);
         }
       };
       fileReader.readAsDataURL(acceptedFiles[0]);
@@ -46,8 +42,7 @@
 />
 
 <style>
-  :global(input[type='file']) {
-  }
+
 
   :global(label[for='file-upload']) {
     border: 2px dashed #cccccc;
