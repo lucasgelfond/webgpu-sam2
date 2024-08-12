@@ -6,11 +6,7 @@
   import { encoderOutput } from '../../lib/encoder-output';
   import { inputImageData } from '../../lib/input-image-data';
   import fetchModel from '../../lib/fetch-model';
-  import scaleAndProcessMasks from './utils/scale-and-process-masks';
-  import drawContour from './utils/draw-contour';
-  import drawMask from './utils/draw-mask';
-  import drawImage from './utils/draw-image';
-
+  import {drawContour, drawImage, drawMask, prepareDecodingInputs, scaleAndProcessMasks} from './utils';
   const ORIGINAL_SIZE = 1024;
   let canvas: HTMLCanvasElement;
   let maskThreshold = 0;
@@ -46,18 +42,7 @@
     isClickDisabled = false;
   }
 
-  function prepareDecodingInputs(encoderOutputs: any, pointCoords: any, pointLabels: any) {
-    const { image_embed, high_res_feats_0, high_res_feats_1 } = encoderOutputs;
-    return {
-      image_embed,
-      high_res_feats_0,
-      high_res_feats_1,
-      point_coords: pointCoords,
-      point_labels: pointLabels,
-      mask_input: new ONNX_WEBGPU.Tensor(new Float32Array(256 * 256), [1, 1, 256, 256]),
-      has_mask_input: new ONNX_WEBGPU.Tensor(new Float32Array([0]), [1]),
-    };
-  }
+
 
   async function handleClick(event: MouseEvent) {
     if (isClickDisabled || !canvas || !$inputImageData || !$encoderOutput) return;
