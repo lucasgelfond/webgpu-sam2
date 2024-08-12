@@ -2,8 +2,10 @@
   import FileDropzone from './file-dropzone.svelte';
   import { sourceImage } from './lib/source-image';
   import { currentStatus } from './lib/current-status';
+  import { encoderOutput } from './lib/encoder-output'; 
   import * as tf from '@tensorflow/tfjs';
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
+  import fetchModel from './lib/fetch-model';
 
 
   let canvas: HTMLCanvasElement;
@@ -59,46 +61,6 @@
     return rgbData;
   }
 
-  async function fetchModel() {
-    currentStatus.set("Fetching model...")
-    const response = await fetch(modelURL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-      },
-      mode: 'cors',
-      credentials: 'omit',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const totalSize = Number(response.headers.get('Content-Length'));
-    const buffer = new Uint8Array(totalSize);
-    let receivedLength = 0;
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Failed to get reader for model stream');
-    }
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer.set(value, receivedLength);
-      receivedLength += value.length;
-    
-      // Download progress indicator
-      const percentComplete = (receivedLength / totalSize) * 100;
-      currentStatus.set(`Fetching model, ${percentComplete.toFixed(2)}%`);
-    }
-
-    const blob = new Blob([buffer], { type: 'application/octet-stream' });
-
-    const arrayBuffer = await blob.arrayBuffer();
-    return arrayBuffer;
-  }
 
   async function runInference(model: ArrayBuffer, batchedTensor: tf.Tensor3D) {
     const session = await ONNX_WEBGPU.InferenceSession.create(model, {
@@ -140,11 +102,10 @@
             const transposed = tf.transpose(tensor, [2, 0, 1]);
             return tf.expandDims(transposed, 0);
           });
-          const model = await fetchModel();
+          const model = await fetchModel(modelURL, 'encoder');
           // @ts-ignore
-              await runInference(model, batchedTensor)
-
-
+          const inferenceResults = await runInference(model, batchedTensor)
+          encoderOutput.set(inferenceResults);
         }
       };
       img.src = $sourceImage;

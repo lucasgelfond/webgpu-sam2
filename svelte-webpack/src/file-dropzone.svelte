@@ -26,6 +26,7 @@
     const acceptedFiles = Array.from(files).filter(file => file.type.includes('image/'));
     const fileRejections = Array.from(files).filter(file => !file.type.includes('image/'));
 
+
     if (acceptedFiles.length > 0) {
       const fileReader = new FileReader();
       fileReader.onload = () => {
