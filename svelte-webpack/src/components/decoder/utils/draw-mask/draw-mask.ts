@@ -5,7 +5,6 @@ function drawMask(
   alpha: number,
   maskWidth: number,
   maskHeight: number,
-  threshold: number,
   canvasSize: number,
   offset: { x: number; y: number },
 ) {
@@ -16,12 +15,16 @@ function drawMask(
   for (let y = 0; y < maskHeight; y++) {
     for (let x = 0; x < maskWidth; x++) {
       const maskIndex = y * maskWidth + x;
-      if (mask[maskIndex] > threshold) {
+
+      // Masks are binary after post-processing - if this is truthy, we show it
+      if (mask[maskIndex]) {
         const startX = Math.floor(x * scaleX);
         const startY = Math.floor(y * scaleY);
         const endX = Math.floor((x + 1) * scaleX);
         const endY = Math.floor((y + 1) * scaleY);
 
+        // Draw the mask by applying the previous image and blending with the mask color
+        // Note "alpha" here - we are adding a partially transparent mask when we blend
         for (let py = startY; py < endY; py++) {
           for (let px = startX; px < endX; px++) {
             const index = (py * canvasSize + px) * 4;

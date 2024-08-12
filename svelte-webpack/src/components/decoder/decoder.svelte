@@ -101,10 +101,9 @@
           context,
           postProcessedMasks[i],
           colors[i % colors.length] as [number, number, number],
-          0.3,
-          ORIGINAL_SIZE,
-          ORIGINAL_SIZE,
           0.5,
+          ORIGINAL_SIZE,
+          ORIGINAL_SIZE,
           canvasSize,
           offset
         );
