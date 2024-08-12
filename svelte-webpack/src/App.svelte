@@ -19,7 +19,10 @@
     Built by <a href="http://lucasgelfond.online">Lucas Gelfond</a> in San Francisco.
   </p>
   <div class="ui-element-container">
-    <p class="current-status">{$currentStatus}</p>
+    <p class="current-status">
+      {$currentStatus}
+
+    </p>
 
     <Encoder />
     <Decoder />
@@ -33,7 +36,7 @@
     font-size: 1.5em;
     font-weight: 500;
     font-family: 'Univers Lt Std', sans-serif;
-    min-height: 3em;
+    min-height: 2em;
     line-height: 1.5em;
 
     }  
