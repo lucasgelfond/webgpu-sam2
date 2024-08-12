@@ -4,17 +4,17 @@ A starter template for [Svelte](https://svelte.dev) that comes preconfigured wit
 Autoprefixer, and HMR.
 
 - [Getting started](#getting-started)
-	- [Installation](#installation)
-	- [Starting the development server](#starting-the-development-server)
-	- [Building for production](#building-for-production)
-	- [Running in production](#running-in-production)
+  - [Installation](#installation)
+  - [Starting the development server](#starting-the-development-server)
+  - [Building for production](#building-for-production)
+  - [Running in production](#running-in-production)
 - [Usage](#usage)
-	- [Global stylesheets](#global-stylesheets)
-	- [Single page applications](#single-page-applications)
-	- [Browsers list](#browsers-list)
-	- [Babel customization](#babel-customization)
-	- [Source maps in production](#source-maps-in-production)
-	- [Import path aliases](#import-path-aliases)
+  - [Global stylesheets](#global-stylesheets)
+  - [Single page applications](#single-page-applications)
+  - [Browsers list](#browsers-list)
+  - [Babel customization](#babel-customization)
+  - [Source maps in production](#source-maps-in-production)
+  - [Import path aliases](#import-path-aliases)
 
 ---
 
@@ -88,9 +88,7 @@ Add one or more global stylesheets to the bundle by editing the `stylesheets` va
 `webpack.config.ts`:
 
 ```ts
-const stylesheets = [
-    './src/styles/index.scss'
-];
+const stylesheets = ['./src/styles/index.scss'];
 ```
 
 You can specify `css`, `scss`, and `sass` files here, and they will be compiled and minified as necessary. These styles

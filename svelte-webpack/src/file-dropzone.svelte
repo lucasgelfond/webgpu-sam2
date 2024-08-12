@@ -23,9 +23,8 @@
     const input = e.target as HTMLInputElement;
     if (!input.files) return;
     const files = input.files;
-    const acceptedFiles = Array.from(files).filter(file => file.type.includes('image/'));
-    const fileRejections = Array.from(files).filter(file => !file.type.includes('image/'));
-
+    const acceptedFiles = Array.from(files).filter((file) => file.type.includes('image/'));
+    const fileRejections = Array.from(files).filter((file) => !file.type.includes('image/'));
 
     if (acceptedFiles.length > 0) {
       const fileReader = new FileReader();
@@ -39,13 +38,18 @@
   }
 </script>
 
-<input type="file" on:change={handleFilesSelect} accept="image/gif,image/png,image/jpeg,image/jpg" multiple={false}>
+<input
+  type="file"
+  on:change={handleFilesSelect}
+  accept="image/gif,image/png,image/jpeg,image/jpg"
+  multiple={false}
+/>
 
 <style>
-  :global(input[type="file"]) {
+  :global(input[type='file']) {
   }
 
-  :global(label[for="file-upload"]) {
+  :global(label[for='file-upload']) {
     border: 2px dashed #cccccc;
     border-radius: 4px;
     padding: 0px;
@@ -56,18 +60,18 @@
     cursor: pointer;
   }
 
-  :global(label[for="file-upload"]:hover) {
+  :global(label[for='file-upload']:hover) {
     border-color: #4caf50;
     background-color: #f0f0f0;
     transition: all 0.1s ease;
   }
 
-  :global(label[for="file-upload"].active) {
+  :global(label[for='file-upload'].active) {
     border-color: #4caf50;
     background-color: #e8f5e9;
   }
 
-  :global(label[for="file-upload"] p) {
+  :global(label[for='file-upload'] p) {
     margin: 0;
     font-size: 16px;
     color: #333333;
