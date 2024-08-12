@@ -1,4 +1,4 @@
-import { currentStatus } from './current-status';
+import { currentStatus } from 'src/lib';
 
 const BASE_URL = 'https://sam2-model-download.b-cdn.net';
 

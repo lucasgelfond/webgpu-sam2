@@ -1,10 +1,7 @@
 // @ts-ignore
 import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
 import * as tf from '@tensorflow/tfjs';
-import { encoderOutput } from '../../../../lib/encoder-output';
-import { inputImageData } from '../../../../lib/input-image-data';
-import { currentStatus } from '../../../../lib/current-status';
-import fetchModel from '../../../../lib/fetch-model';
+import { encoderOutput, inputImageData, currentStatus, fetchModel } from 'src/lib';
 
 const processImage = async (img: HTMLImageElement, modelSize: string) => {
   currentStatus.set(

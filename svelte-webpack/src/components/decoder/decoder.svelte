@@ -2,11 +2,11 @@
   import { onMount } from 'svelte';
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
-  import { currentStatus } from '../../lib/current-status';
-  import { encoderOutput } from '../../lib/encoder-output';
-  import { inputImageData } from '../../lib/input-image-data';
-  import fetchModel from '../../lib/fetch-model';
+  import {currentStatus, encoderOutput, inputImageData, fetchModel} from 'src/lib';
   import {drawContour, drawImage, drawMask, prepareDecodingInputs, scaleAndProcessMasks} from './utils';
+  
+  
+  
   const ORIGINAL_SIZE = 1024;
   let canvas: HTMLCanvasElement;
   let maskThreshold = 0;

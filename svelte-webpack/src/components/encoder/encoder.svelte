@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   // @ts-ignore
-  import processImage from './utils/process-image/process-image';
-  import { currentStatus } from '../../lib/current-status';
-  import { modelSize } from '../../lib/model-size';
+  import {processImage} from './utils';
+  import {currentStatus, modelSize} from 'src/lib'
+
 
   let imageElement: HTMLImageElement;
   let droppedFile = null;
