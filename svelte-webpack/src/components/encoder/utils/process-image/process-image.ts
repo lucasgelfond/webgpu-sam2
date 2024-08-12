@@ -6,7 +6,7 @@ import { inputImageData } from '../../../../lib/input-image-data';
 import { currentStatus } from '../../../../lib/current-status';
 import fetchModel from '../../../../lib/fetch-model';
 
-const processImage = async (img: HTMLImageElement) => {
+const processImage = async (img: HTMLImageElement, modelSize: string) => {
   currentStatus.set(
     `Uploaded image is ${img.width}x${img.height}px. Loading the encoder model (~28 MB).`,
   );
@@ -53,7 +53,7 @@ const processImage = async (img: HTMLImageElement) => {
     });
 
     try {
-      const model = await fetchModel({ isEncoder: true, modelSize: 'tiny' });
+      const model = await fetchModel({ isEncoder: true, modelSize });
       const session = await ONNX_WEBGPU.InferenceSession.create(model, {
         executionProviders: ['webgpu'],
         graphOptimizationLevel: 'disabled',
