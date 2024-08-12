@@ -4,7 +4,9 @@
 		"build": "cross-env NODE_ENV=production webpack",
 		"dev": "webpack serve",
 		"start": "serve public --listen 8080",
-		"validate": "svelte-check"
+		"validate": "svelte-check",
+		    "lint": "prettier --check . && eslint .",
+    "format": "prettier --plugin-search-dir . --write ."
 	},
 	"devDependencies": {
 		"@babel/core": "^7.23.2",
