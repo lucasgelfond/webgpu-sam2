@@ -17,12 +17,13 @@
   let canvasSize: number;
   let scale: number;
   let offset: { x: number; y: number };
+  let resizeObserver: ResizeObserver;
 
   $: modelURL = isUsingMobileSam
     ? 'https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx'
     : 'https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx';
 
-  $: if (canvas) {
+  $: if (canvas && $inputImageData) {
     canvasSize = Math.min(canvas.width, canvas.height);
     scale = canvasSize / ORIGINAL_SIZE;
     offset = {
@@ -30,6 +31,16 @@
       y: (canvas.height - canvasSize) / 2,
     };
     drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+
+    if (!resizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        if (canvas.parentElement) {
+          canvas.width = canvas.parentElement.clientWidth;
+          canvas.height = canvas.parentElement.clientHeight;
+        }
+      });
+      resizeObserver.observe(canvas.parentElement);
+    }
   }
 
   $: $inputImageData, drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
@@ -46,8 +57,6 @@
       has_mask_input: new ONNX_WEBGPU.Tensor(new Float32Array([0]), [1]),
     };
   }
-
-
 
   async function handleClick(event: MouseEvent) {
     if (!canvas || !$inputImageData || !$encoderOutput) return;
@@ -137,7 +146,7 @@
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    context.fillStyle = '#f0f0f0';
+    context.fillStyle = 'white';
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     const tempCanvas = document.createElement('canvas');
@@ -152,29 +161,27 @@
   }
 
   onMount(() => {
-    if (!canvas) return;
-    const resizeObserver = new ResizeObserver(() => {
-      if (canvas.parentElement) {
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
-      }
-    });
-    resizeObserver.observe(canvas.parentElement);
-
     return () => {
-      resizeObserver.disconnect();
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
     };
   });
 </script>
 
-<div class="container">
-  <canvas bind:this={canvas} on:click={handleClick} />
-  <div>
-    <label for="threshold">Mask Threshold: </label>
-    <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
-    <span>{maskThreshold}</span>
+{#if !$inputImageData}
+  <div class="container">
   </div>
-</div>
+{:else}
+  <div class="container">
+    <div>
+      <label for="threshold">Mask Threshold: </label>
+      <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
+      <span>{maskThreshold}</span>
+    </div>
+    <canvas bind:this={canvas} on:click={handleClick} />
+  </div>
+{/if}
 
 <style>
   .container {
