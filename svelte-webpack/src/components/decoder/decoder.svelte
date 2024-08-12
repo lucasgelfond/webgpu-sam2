@@ -13,11 +13,12 @@
   export let isUsingMobileSam: boolean = false;
   const ORIGINAL_SIZE = 1024;
   let canvas: HTMLCanvasElement;
-  let maskThreshold = 2;
+  let maskThreshold = 0;
   let canvasSize: number;
   let scale: number;
   let offset: { x: number; y: number };
   let resizeObserver: ResizeObserver;
+  let isClickDisabled = true;
 
   $: modelURL = isUsingMobileSam
     ? 'https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx'
@@ -45,6 +46,10 @@
 
   $: $inputImageData, drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
 
+  $: if ($encoderOutput) {
+    isClickDisabled = false;
+  }
+
   function prepareDecodingInputs(encoderOutputs: any, pointCoords: any, pointLabels: any) {
     const { image_embed, high_res_feats_0, high_res_feats_1 } = encoderOutputs;
     return {
@@ -59,7 +64,7 @@
   }
 
   async function handleClick(event: MouseEvent) {
-    if (!canvas || !$inputImageData || !$encoderOutput) return;
+    if (isClickDisabled || !canvas || !$inputImageData || !$encoderOutput) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = (event.clientX - rect.left - offset.x) / scale;
@@ -179,7 +184,18 @@
       <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
       <span>{maskThreshold}</span>
     </div>
-    <canvas bind:this={canvas} on:click={handleClick} />
+    <canvas bind:this={canvas} on:click={handleClick} 
+           on:mouseover={() => {
+             if (isClickDisabled) {
+               currentStatus.set('Clicking is disabled until encoder output is available.');
+             }
+           }} 
+           on:focus={() => {
+             if (isClickDisabled) {
+               currentStatus.set('Clicking is disabled until encoder output is available.');
+             }
+           }} 
+           style:cursor={isClickDisabled ? 'not-allowed' : 'pointer'} />
   </div>
 {/if}
 
