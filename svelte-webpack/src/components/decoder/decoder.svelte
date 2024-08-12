@@ -115,7 +115,6 @@
           postProcessedMasks[i],
           canvasSize,
           canvasSize,
-          0.5,
           offset
         );
       }

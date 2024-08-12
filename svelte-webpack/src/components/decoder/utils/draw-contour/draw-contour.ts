@@ -29,7 +29,7 @@ function drawContour(
           // Note: the canvas is scaled from 1024x1024 to the actual size in the DOM
           const canvasX = x * scaleX + offset.x;
           const canvasY = y * scaleY + offset.y;
-          context.rect(canvasX, canvasY, 1, 1);
+          context.rect(canvasX, canvasY, 0.1, 0.1);
         }
       }
     }
