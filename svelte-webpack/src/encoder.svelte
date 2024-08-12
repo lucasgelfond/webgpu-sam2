@@ -4,12 +4,12 @@
   import { currentStatus } from './lib/current-status';
   import { encoderOutput } from './lib/encoder-output';
   import {inputImageData} from './lib/input-image-data';
+  import {canvas} from './lib/canvas';
   import * as tf from '@tensorflow/tfjs';
   //@ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
   import fetchModel from './lib/fetch-model';
 
-  let canvas: HTMLCanvasElement;
   let ctx;
   let batchedTensor;
   let initialSourceImg = '';
@@ -96,7 +96,7 @@
     if ($sourceImage) {
       const img = new Image();
       img.onload = async () => {
-        ctx = canvas.getContext('2d');
+        ctx = $canvas.getContext('2d');
         if (ctx) {
           const imageData = resizeImage(img, ctx);
           inputImageData.set(imageData);
@@ -120,9 +120,6 @@
 <div class="container">
   {#if $sourceImage === ''}
     <FileDropzone />
-  {:else}
-    <canvas bind:this={canvas} width="1024" height="1024" style="width: 512px; height: 512px;"
-    ></canvas>
   {/if}
 </div>
 
@@ -133,8 +130,4 @@
     font-family: 'UniversLTStd', sans-serif;
   }
 
-  canvas {
-    max-width: 100%;
-    height: auto;
-  }
 </style>
