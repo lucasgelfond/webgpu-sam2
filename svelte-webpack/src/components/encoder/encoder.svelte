@@ -8,7 +8,7 @@
   import { inputImageData } from '../../lib/input-image-data';
   import fetchModel from '../../lib/fetch-model';
 
-  let imageRef: HTMLImageElement;
+  let imageElement: HTMLImageElement;
   let isLoading = false;
   let isUsingMobileSam = false;
 
@@ -18,9 +18,9 @@
     if (FileReader && files && files.length) {
       const fileReader = new FileReader();
       fileReader.onload = () => {
-        if (imageRef) {
-          imageRef.onload = () => handleImage(imageRef);
-          imageRef.src = fileReader.result as string;
+        if (imageElement) {
+          imageElement.onload = () => handleImage(imageElement);
+          imageElement.src = fileReader.result as string;
         }
       };
       fileReader.readAsDataURL(files[0]);
@@ -79,8 +79,7 @@
           executionProviders: ['webgpu'],
           graphOptimizationLevel: 'disabled',
         });
-        console.log(model);
-        console.log({session})
+
         const feeds = {
           image: new ONNX_WEBGPU.Tensor(batchedTensor.dataSync(), batchedTensor.shape),
         };
@@ -91,15 +90,8 @@
         const time_taken = (end - start) / 1000;
 
         console.log({results})
-        const { image_embed, high_res_feats_0, high_res_feats_1 } = results;
-
         // Update encoderOutput to notify subscribers
         encoderOutput.update(current => ({...current, ...results}));
-
-        console.log({image_embed,
-          high_res_feats_0,
-          high_res_feats_1,
-          results})
 
         inputImageData.set(imageData);
         currentStatus.set(`Embedding generated in ${time_taken} seconds. Click on the image to generate a mask.`);
@@ -113,15 +105,15 @@
   };
 
   onMount(() => {
-    if (imageRef) {
-      imageRef.style.display = 'none';
+    if (imageElement) {
+      imageElement.style.display = 'none';
     }
   });
 </script>
 
 <div>
   <input type="file" on:change={handleFileChange} />
-  <img bind:this={imageRef} alt="Uploaded" style="display: none;"/>
+  <img bind:this={imageElement} alt="Uploaded" style="display: none;"/>
   {#if isLoading}
     <div class="spinner">
       <div class="loader"></div>
@@ -151,5 +143,3 @@
     100% { transform: rotate(360deg); }
   }
 </style>
-
-export default as encoder;

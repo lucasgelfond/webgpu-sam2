@@ -296,4 +296,3 @@
   }
 </style>
 
-export default as decoder;
