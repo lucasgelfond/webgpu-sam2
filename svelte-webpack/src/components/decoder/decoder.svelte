@@ -2,11 +2,15 @@
   import { onMount } from 'svelte';
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
-  import {currentStatus, encoderOutput, inputImageData, fetchModel} from 'src/lib';
-  import {drawContour, drawImage, drawMask, prepareDecodingInputs, scaleAndProcessMasks} from './utils';
-  
-  
-  
+  import { currentStatus, encoderOutput, inputImageData, fetchModel } from 'src/lib';
+  import {
+    drawContour,
+    drawImage,
+    drawMask,
+    prepareDecodingInputs,
+    scaleAndProcessMasks,
+  } from './utils';
+
   const ORIGINAL_SIZE = 1024;
   let canvas: HTMLCanvasElement;
   let maskThreshold = 0;
@@ -42,8 +46,6 @@
     isClickDisabled = false;
   }
 
-
-
   async function handleClick(event: MouseEvent) {
     if (isClickDisabled || !canvas || !$inputImageData || !$encoderOutput) return;
 
@@ -69,7 +71,7 @@
     const pointLabels = new ONNX_WEBGPU.Tensor(inputPointLabels, [1, 2]);
 
     try {
-      const decoderModel = await fetchModel({isEncoder: false, modelSize: 'small'});
+      const decoderModel = await fetchModel({ isEncoder: false, modelSize: 'small' });
       const decodingSession = await ONNX_WEBGPU.InferenceSession.create(decoderModel, {
         executionProviders: ['webgpu'],
       });
@@ -100,18 +102,12 @@
           ORIGINAL_SIZE,
           ORIGINAL_SIZE,
           canvasSize,
-          offset
+          offset,
         );
       }
 
       for (let i = 0; i < postProcessedMasks.length; i++) {
-        drawContour(
-          context,
-          postProcessedMasks[i],
-          canvasSize,
-          canvasSize,
-          offset
-        );
+        drawContour(context, postProcessedMasks[i], canvasSize, canvasSize, offset);
       }
 
       console.log('Masks drawn:', postProcessedMasks.length);
@@ -120,7 +116,6 @@
       currentStatus.set(`Error running inference: ${error}`);
     }
   }
-
 
   onMount(() => {
     return () => {
@@ -132,8 +127,7 @@
 </script>
 
 {#if !$inputImageData}
-  <div class="container">
-  </div>
+  <div class="container"></div>
 {:else}
   <div class="container">
     <div class="threshold-element">
@@ -141,18 +135,21 @@
       <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
       <span>{maskThreshold}</span>
     </div>
-    <canvas bind:this={canvas} on:click={handleClick} 
-           on:mouseover={() => {
-             if (isClickDisabled) {
-               currentStatus.set('Clicking is disabled until encoder output is available.');
-             }
-           }} 
-           on:focus={() => {
-             if (isClickDisabled) {
-               currentStatus.set('Clicking is disabled until encoder output is available.');
-             }
-           }} 
-           style:cursor={isClickDisabled ? 'not-allowed' : 'pointer'} />
+    <canvas
+      bind:this={canvas}
+      on:click={handleClick}
+      on:mouseover={() => {
+        if (isClickDisabled) {
+          currentStatus.set('Clicking is disabled until encoder output is available.');
+        }
+      }}
+      on:focus={() => {
+        if (isClickDisabled) {
+          currentStatus.set('Clicking is disabled until encoder output is available.');
+        }
+      }}
+      style:cursor={isClickDisabled ? 'not-allowed' : 'pointer'}
+    />
   </div>
 {/if}
 

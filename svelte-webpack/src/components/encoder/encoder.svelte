@@ -1,9 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   // @ts-ignore
-  import {processImage} from './utils';
-  import {currentStatus, modelSize} from 'src/lib'
-
+  import { processImage } from './utils';
+  import { currentStatus, modelSize } from 'src/lib';
 
   let imageElement: HTMLImageElement;
   let droppedFile = null;
@@ -104,7 +103,6 @@
     margin-top: 20px;
     max-width: 700px;
     font-family: 'UniversLTStd', sans-serif;
-
   }
 
   .dropzone:hover {
@@ -127,5 +125,4 @@
     border-radius: 5px;
     padding: 5px;
   }
-
 </style>
