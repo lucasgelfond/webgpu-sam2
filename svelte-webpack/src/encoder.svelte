@@ -61,7 +61,14 @@
           rgbData.push(normalizedValue);
         }
       }
-      const tensor = tf.tensor4d(rgbData, [1, 3, 1024, 1024]);
+      // Create a tensor with shape [1024, 1024, 3]
+      const tensor = tf.tensor3d(rgbData, [1024, 1024, 3]);
+
+      // Transpose and reshape to [1, 3, 1024, 1024]
+      const batchedTensor = tf.tidy(() => {
+        const transposed = tf.transpose(tensor, [2, 0, 1]);
+        return tf.expandDims(transposed, 0);
+      });
 
       const url = isUsingMobileSam
         ? 'https://sam2-download.b-cdn.net/models/mobilesam.encoder.onnx'
@@ -75,9 +82,8 @@
         });
         console.log(model);
         console.log({session})
-
         const feeds = {
-          image: new ONNX_WEBGPU.Tensor(tensor.dataSync(), tensor.shape),
+          image: new ONNX_WEBGPU.Tensor(batchedTensor.dataSync(), batchedTensor.shape),
         };
 
         const start = Date.now();
