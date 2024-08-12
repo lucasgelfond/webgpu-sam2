@@ -34,6 +34,7 @@
   }
 
   .container {
+    padding: 200px;
     display: flex;
     flex-direction: column;
     font-family: 'UniversLTStd', sans-serif;

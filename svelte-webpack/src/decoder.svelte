@@ -7,11 +7,14 @@
   import { inputImageData } from './lib/input-image-data';
   import fetchModel from './lib/fetch-model';
 
-
   export let isUsingMobileSam: boolean = false;
 
   let canvasRef: HTMLCanvasElement;
   let maskThreshold = 2;
+  let originalImageSize: { width: number, height: number };
+  let scaleFactor: number;
+  let offsetX: number;
+  let offsetY: number;
 
   $: modelURL = isUsingMobileSam
     ? "https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx"
@@ -174,11 +177,11 @@
   }
 
   async function handleClick(event: MouseEvent) {
-    if (!canvasRef || !inputImageData || !encoderOutput) return;
+    if (!canvasRef || !$inputImageData || !$encoderOutput) return;
 
     const rect = canvasRef.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const x = (event.clientX - rect.left - offsetX) / scaleFactor;
+    const y = (event.clientY - rect.top - offsetY) / scaleFactor;
 
     console.log("Clicked position:", x, y);
     currentStatus.set(`Clicked on (${x}, ${y}). Downloading the decoder model if needed and generating masks...`);
@@ -187,13 +190,15 @@
     if (!context) return;
 
     context.clearRect(0, 0, canvasRef.width, canvasRef.height);
-    canvasRef.width = $inputImageData.width;
-    canvasRef.height = $inputImageData.height;
-    context.putImageData($inputImageData, 0, 0);
+    context.putImageData($inputImageData, offsetX, offsetY);
     context.fillStyle = "rgba(0, 0, 139, 0.7)";  // Dark blue with some transparency
-    context.fillRect(x - 1, y - 1, 2, 2);  // Smaller 2x2 pixel
+    context.fillRect(x * scaleFactor + offsetX - 1, y * scaleFactor + offsetY - 1, 2, 2);  // Smaller 2x2 pixel
 
-    const inputPointCoords = new Float32Array([(x / canvasRef.width) * 1024, (y / canvasRef.height) * 1024, 0, 0]);
+    // Scale the click coordinates to the 1024x1024 space
+    const scaledX = (x / originalImageSize.width) * 1024;
+    const scaledY = (y / originalImageSize.height) * 1024;
+
+    const inputPointCoords = new Float32Array([scaledX, scaledY, 0, 0]);
     const inputPointLabels = new Float32Array([1, -1]);
     const pointCoords = new ONNX_WEBGPU.Tensor(inputPointCoords, [1, 2, 2]);
     const pointLabels = new ONNX_WEBGPU.Tensor(inputPointLabels, [1, 2]);
@@ -217,7 +222,7 @@
       const time_taken = (stop - start) / 1000;
       currentStatus.set(`Inference completed in ${time_taken} seconds`);
 
-      const originalSize: [number, number] = [canvasRef.height, canvasRef.width];
+      const originalSize: [number, number] = [originalImageSize.height, originalImageSize.width];
       const postProcessedMasks = postProcessMasks(masks, originalSize, maskThreshold / 10);
 
       const colors = [
@@ -226,7 +231,7 @@
         [139, 0, 0],  // Dark red
       ];
 
-      let combinedImageData = context.getImageData(0, 0, canvasRef.width, canvasRef.height);
+      let combinedImageData = context.getImageData(offsetX, offsetY, originalImageSize.width, originalImageSize.height);
 
       for (let i = 0; i < postProcessedMasks.length; i++) {
         combinedImageData = drawMask(
@@ -234,22 +239,22 @@
           postProcessedMasks[i],
           colors[i % colors.length] as [number, number, number],
           0.3,
-          canvasRef.width,
-          canvasRef.height,
+          originalImageSize.width,
+          originalImageSize.height,
           0.5
         );
       }
 
-      context.putImageData(combinedImageData, 0, 0);
+      context.putImageData(combinedImageData, offsetX, offsetY);
 
       for (let i = 0; i < postProcessedMasks.length; i++) {
         drawContour(
           context,
           postProcessedMasks[i],
-          canvasRef.width,
-          canvasRef.height,
-          canvasRef.width,
-          canvasRef.height,
+          originalImageSize.width,
+          originalImageSize.height,
+          originalImageSize.width,
+          originalImageSize.height,
           0.5
         );
       }
@@ -262,20 +267,68 @@
   }
 
   onMount(() => {
-    if (canvasRef && $inputImageData) {
+    if (canvasRef) {
       const context = canvasRef.getContext("2d");
-      if (context) {
-        context.clearRect(0, 0, canvasRef.width, canvasRef.height);
-        canvasRef.width =  $inputImageData.width;
-        canvasRef.height =  $inputImageData.height;
-        context.putImageData( $inputImageData, 0, 0);
+      if (context && $inputImageData) {
+        // Force 1:1 aspect ratio
+        const size = Math.min(window.innerWidth * 0.8, window.innerHeight * 0.8);
+        canvasRef.width = size;
+        canvasRef.height = size;
+
+        // Store original image size
+        originalImageSize = {
+          width: $inputImageData.width,
+          height: $inputImageData.height
+        };
+
+        // Calculate scaling factors
+        const scaleX = size / $inputImageData.width;
+        const scaleY = size / $inputImageData.height;
+        scaleFactor = Math.min(scaleX, scaleY);
+
+        // Calculate new dimensions
+        const newWidth = Math.round($inputImageData.width * scaleFactor);
+        const newHeight = Math.round($inputImageData.height * scaleFactor);
+
+        // Calculate offsets to center the image
+        offsetX = Math.floor((size - newWidth) / 2);
+        offsetY = Math.floor((size - newHeight) / 2);
+
+        // Clear the main canvas
+        context.fillStyle = "#f0f0f0";
+        context.fillRect(0, 0, size, size);
+
+        // Create a temporary canvas to scale the image
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = newWidth;
+        tempCanvas.height = newHeight;
+        const tempContext = tempCanvas.getContext('2d');
+
+        // Create an ImageBitmap from the ImageData
+        createImageBitmap($inputImageData).then(imageBitmap => {
+          // Draw the scaled image on the temporary canvas
+          tempContext.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
+
+          // Draw the scaled image on the main canvas
+          context.drawImage(tempCanvas, offsetX, offsetY);
+        });
+      } else if (context) {
+        // If there's no input data, draw a placeholder
+        canvasRef.width = 400;
+        canvasRef.height = 400;
+        context.fillStyle = "#f0f0f0";
+        context.fillRect(0, 0, canvasRef.width, canvasRef.height);
+        context.font = "20px Arial";
+        context.fillStyle = "#333";
+        context.textAlign = "center";
+        context.fillText("No image uploaded yet", canvasRef.width / 2, canvasRef.height / 2);
       }
     }
   });
 </script>
 
 <div class="container">
-  <canvas bind:this={canvasRef} on:click={handleClick} />
+  <canvas bind:this={canvasRef} on:click={handleClick}/>
   <div>
     <label for="threshold">Mask Threshold: </label>
     <input
@@ -295,5 +348,10 @@
     display: flex;
     flex-direction: column;
     padding: 20px;
+    align-items: center;
+  }
+  canvas {
+    max-width: 100%;
+    max-height: 80vh;
   }
 </style>
