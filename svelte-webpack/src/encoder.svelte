@@ -1,133 +1,148 @@
 <script lang="ts">
-  import FileDropzone from './file-dropzone.svelte';
+  import { onMount } from 'svelte';
+  // @ts-ignore
+  import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
+  import * as tf from '@tensorflow/tfjs';
   import { sourceImage } from './lib/source-image';
   import { currentStatus } from './lib/current-status';
   import { encoderOutput } from './lib/encoder-output';
-  import {inputImageData} from './lib/input-image-data';
-  import {canvas} from './lib/canvas';
-  import * as tf from '@tensorflow/tfjs';
-  //@ts-ignore
-  import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
+  import { inputImageData } from './lib/input-image-data';
   import fetchModel from './lib/fetch-model';
 
-  let ctx;
-  let batchedTensor;
-  let initialSourceImg = '';
-  let modelType = 'small';
-  const modelURL =
-    modelType === 'small'
-      ? 'https://sam2-download.b-cdn.net/sam2_hiera_small.encoder.with_runtime_opt.ort'
-      : 'https://sam2-download.b-cdn.net/sam2_hiera_tiny.encoder.with_runtime_opt.ort';
+  let imageRef: HTMLImageElement;
+  let isLoading = false;
+  let isUsingMobileSam = false;
 
-  function resizeImage(img: HTMLImageElement, ctx: CanvasRenderingContext2D) {
-    currentStatus.set('Resizing image...');
-    const scale = Math.min(1024 / img.width, 1024 / img.height);
-    const scaledWidth = img.width * scale;
-    const scaledHeight = img.height * scale;
-    const x = (1024 - scaledWidth) / 2;
-    const y = (1024 - scaledHeight) / 2;
-
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 1024, 1024);
-    const fadeInTime = 1000; // in ms
-
-    let opacity = 0;
-    const fadeIn = setInterval(() => {
-      ctx.globalAlpha = opacity;
-      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-      opacity += 0.01;
-      if (opacity >= 1) {
-        clearInterval(fadeIn);
-        ctx.globalAlpha = 1;
-      }
-    }, fadeInTime / 100);
-    return ctx.getImageData(0, 0, 1024, 1024);
-  }
-
-  function normalizeImage(imageData: ImageData) {
-    currentStatus.set('Normalizing image...');
-    const rgbData = [];
-
-    const mean = [0.485, 0.456, 0.406];
-    const std = [0.229, 0.224, 0.225];
-
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      for (let j = 0; j < 3; j++) {
-        const pixelValue = imageData.data[i + j] / 255.0;
-        const normalizedValue = (pixelValue - mean[j]) / std[j];
-        rgbData.push(normalizedValue);
-      }
-    }
-
-    return rgbData;
-  }
-
-  async function runInference(model: ArrayBuffer, batchedTensor: tf.Tensor3D) {
-    const session = await ONNX_WEBGPU.InferenceSession.create(model, {
-      executionProviders: ['webgpu'],
-      graphOptimizationLevel: 'disabled',
-    });
-    const feeds = {
-      image: new ONNX_WEBGPU.Tensor(batchedTensor.dataSync(), batchedTensor.shape),
-    };
-    const start = Date.now();
-    try {
-      const results = await session.run(feeds);
-      const end = Date.now();
-      const time_taken = (end - start) / 1000;
-      currentStatus.set(`Embedding completed in ${time_taken} seconds`);
-      encoderOutput.set({
-        imageEmbeddings: new Float32Array(results.imageEmbeddings),
-        highResFeats: {
-          high_res_feats_0: results.high_res_feats_0,
-          high_res_feats_1: results.high_res_feats_1,
-        },
-      })
-      return results;
-    } catch (error) {
-      console.error(error);
-      currentStatus.set(`Error running inference: ${error}`);
-    }
-  }
-
-  // Make sure we run these steps only when the image changes
-  $: if ($sourceImage !== initialSourceImg) {
-    initialSourceImg = $sourceImage;
-    if ($sourceImage) {
-      const img = new Image();
-      img.onload = async () => {
-        ctx = $canvas.getContext('2d');
-        if (ctx) {
-          const imageData = resizeImage(img, ctx);
-          inputImageData.set(imageData);
-          const rgbData = normalizeImage(imageData);
-          const tensor = tf.tensor3d(rgbData, [1024, 1024, 3]);
-          batchedTensor = tf.tidy(() => {
-            const transposed = tf.transpose(tensor, [2, 0, 1]);
-            return tf.expandDims(transposed, 0);
-          });
-          const model = await fetchModel(modelURL, 'encoder');
-          // @ts-ignore
-          const inferenceResults = await runInference(model, batchedTensor);
-          encoderOutput.set(inferenceResults);
+  const handleFileChange = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (FileReader && files && files.length) {
+      const fileReader = new FileReader();
+      fileReader.onload = () => {
+        if (imageRef) {
+          imageRef.onload = () => handleImage(imageRef);
+          imageRef.src = fileReader.result as string;
         }
       };
-      img.src = $sourceImage;
+      fileReader.readAsDataURL(files[0]);
     }
-  }
+  };
+
+  const handleImage = async (img: HTMLImageElement) => {
+    currentStatus.set(`Uploaded image is ${img.width}x${img.height}px. Loading the encoder model (~28 MB).`);
+    isLoading = true;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+
+    if (ctx) {
+      const scale = Math.max(1024 / img.width, 1024 / img.height);
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+      const x = (1024 - scaledWidth) / 2;
+      const y = (1024 - scaledHeight) / 2;
+
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 1024, 1024);
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+
+      const imageData = ctx.getImageData(0, 0, 1024, 1024);
+      const rgbData = [];
+
+      const mean = [0.485, 0.456, 0.406];
+      const std = [0.229, 0.224, 0.225];
+
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        for (let j = 0; j < 3; j++) {
+          const pixelValue = imageData.data[i + j] / 255.0;
+          const normalizedValue = (pixelValue - mean[j]) / std[j];
+          rgbData.push(normalizedValue);
+        }
+      }
+      const tensor = tf.tensor4d(rgbData, [1, 3, 1024, 1024]);
+
+      const url = isUsingMobileSam
+        ? 'https://sam2-download.b-cdn.net/models/mobilesam.encoder.onnx'
+        : 'https://sam2-download.b-cdn.net/sam2_hiera_small.encoder.with_runtime_opt.ort';
+      
+      try {
+        const model = await fetchModel(url, "encoder");
+        const session = await ONNX_WEBGPU.InferenceSession.create(model, {
+          executionProviders: ['webgpu'],
+          graphOptimizationLevel: 'disabled',
+        });
+        console.log(model);
+        console.log({session})
+
+        const feeds = {
+          image: new ONNX_WEBGPU.Tensor(tensor.dataSync(), tensor.shape),
+        };
+
+        const start = Date.now();
+        const results = await session.run(feeds);
+        const end = Date.now();
+        const time_taken = (end - start) / 1000;
+
+        console.log({results})
+        const { image_embed, high_res_feats_0, high_res_feats_1 } = results;
+
+        // Update encoderOutput to notify subscribers
+        encoderOutput.update(current => ({...current, ...results}));
+
+        console.log({image_embed,
+          high_res_feats_0,
+          high_res_feats_1,
+          results})
+
+        inputImageData.set(imageData);
+        currentStatus.set(`Embedding generated in ${time_taken} seconds. Click on the image to generate a mask.`);
+      } catch (error) {
+        console.error(error);
+        currentStatus.set(`Error: ${error}`);
+      } finally {
+        isLoading = false;
+      }
+    }
+  };
+
+  onMount(() => {
+    if (imageRef) {
+      imageRef.style.display = 'none';
+    }
+  });
 </script>
 
-<div class="container">
-  {#if $sourceImage === ''}
-    <FileDropzone />
+<div>
+  <input type="file" on:change={handleFileChange} />
+  <img bind:this={imageRef} alt="Uploaded" style="display: none;"/>
+  {#if isLoading}
+    <div class="spinner">
+      <div class="loader"></div>
+    </div>
   {/if}
 </div>
 
 <style>
-  .container {
+  .spinner {
     display: flex;
-    flex-direction: column;
-    font-family: 'UniversLTStd', sans-serif;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
   }
 
+  .loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
 </style>

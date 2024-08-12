@@ -23,7 +23,6 @@
   </p>
   <Encoder />
   <Decoder />
-  <canvas bind:this={$canvas} width="1024" height="1024"></canvas>
 </div>
 
 <style>
