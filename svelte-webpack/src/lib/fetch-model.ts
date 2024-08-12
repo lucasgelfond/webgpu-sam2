@@ -5,9 +5,15 @@ const modelDictionary = {
   encoder: {
     tiny: {
       links: ['https://sam2-download.b-cdn.net/sam2_hiera_tiny.encoder.with_runtime_opt.ort'],
+      totalSize: 134451120,
     },
     small: {
       links: ['https://sam2-download.b-cdn.net/sam2_hiera_small.encoder.with_runtime_opt.ort'],
+      totalSize: 162929584,
+    },
+    base_plus: {
+      links: [''],
+      totalSize: 306394720,
     },
   },
   decoder: {
@@ -16,6 +22,9 @@ const modelDictionary = {
     },
     small: {
       links: ['https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx'],
+    },
+    base_plus: {
+      links: [''],
     },
   },
 };
