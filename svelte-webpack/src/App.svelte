@@ -3,7 +3,6 @@
   import Encoder from './encoder.svelte';
   import Decoder from './components/decoder';
   import { currentStatus } from './lib/current-status';
-  import {canvas} from './lib/canvas';
   onMount(() => {
     const font = new FontFace('UniversLTStd', 'url(/public/fonts/UniversLTStd.woff)');
     font.load().then(() => {

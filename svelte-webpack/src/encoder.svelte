@@ -3,7 +3,6 @@
   // @ts-ignore
   import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
   import * as tf from '@tensorflow/tfjs';
-  import { sourceImage } from './lib/source-image';
   import { currentStatus } from './lib/current-status';
   import { encoderOutput } from './lib/encoder-output';
   import { inputImageData } from './lib/input-image-data';
