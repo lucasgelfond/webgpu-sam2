@@ -10,12 +10,9 @@ if (!fs.existsSync(outputDir)) {
 }
 
 const modelSizes = ['tiny', 'small', 'base_plus'];
-const chunkSize = 90 * 1024 * 1024; // 90 MB in bytes
+const chunkSize = 9 * 1024 * 1024; // 9 MB in bytes
 
-modelSizes.forEach((size) => {
-  const fileName = `sam2_hiera_${size}.encoder.with_runtime_opt.ort`;
-  const filePath = path.join(sourceDir, fileName);
-
+function splitModel(fileName, filePath) {
   const fileBuffer = fs.readFileSync(filePath);
   console.log(`Size of ${fileName}: ${fileBuffer.length} bytes`);
 
@@ -26,11 +23,15 @@ modelSizes.forEach((size) => {
 
   // Save chunks to disk
   chunks.forEach((chunk, index) => {
-    // NOTE - you'll need to manually rename these so it's .part1.ort vs. .ort.part1
-    // Fixable here but in a rush so no chance to test the change / it's only a few files
-    const chunkName = `${fileName}.part${index + 1}`;
+    const chunkName = `${fileName.replace('.ort', '')}.part${index + 1}.onnx`;
     fs.writeFileSync(path.join(outputDir, chunkName), chunk);
   });
 
   console.log(`Split ${fileName} into ${chunks.length} parts`);
+}
+
+modelSizes.forEach((size) => {
+  const fileName = `sam2_hiera_${size}.decoder.onnx`;
+  const filePath = path.join(sourceDir, fileName);
+  splitModel(fileName, filePath);
 });
