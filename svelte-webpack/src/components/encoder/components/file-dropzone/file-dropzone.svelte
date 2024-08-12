@@ -1,70 +1,62 @@
-<script lang="ts">
-  interface FileEvent {
-    target: {
-      files: FileList;
-    };
+<script>
+  let droppedFile = null;
+
+  function handleDragOver(event) {
+    event.preventDefault();
   }
 
-  let files: {
-    accepted: File[];
-    rejected: File[];
-  } = {
-    accepted: [],
-    rejected: [],
-  };
-
-  function handleFilesSelect(e: Event) {
-    const input = e.target as HTMLInputElement;
-    if (!input.files) return;
-    const files = input.files;
-    const acceptedFiles = Array.from(files).filter((file) => file.type.includes('image/'));
-    const fileRejections = Array.from(files).filter((file) => !file.type.includes('image/'));
-
-    if (acceptedFiles.length > 0) {
-      const fileReader = new FileReader();
-      fileReader.onload = () => {
-        if (fileReader.result) {
-          // addNewImage(fileReader.result as string);
-        }
-      };
-      fileReader.readAsDataURL(acceptedFiles[0]);
+  function handleDrop(event) {
+    event.preventDefault();
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      droppedFile = files[0];
     }
+  }
+
+  function handleClick() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = (event) => {
+      const files = event.target.files;
+      if (files.length > 0) {
+        droppedFile = files[0];
+      }
+    };
+    input.click();
   }
 </script>
 
-<input
-  type="file"
-  on:change={handleFilesSelect}
-  accept="image/gif,image/png,image/jpeg,image/jpg"
-  multiple={false}
-/>
-
 <style>
-  :global(label[for='file-upload']) {
-    border: 2px dashed #cccccc;
-    border-radius: 4px;
-    padding: 0px;
+  .dropzone {
+    width: 100%;
+    height: 200px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    background-color: #f8f8f8;
-    transition: all 0.1s ease;
-    max-width: 500px;
+    color: #ccc;
+    font-size: 1.2em;
+    transition: border-color 0.3s ease-in-out;
     cursor: pointer;
   }
 
-  :global(label[for='file-upload']:hover) {
-    border-color: #4caf50;
-    background-color: #f0f0f0;
-    transition: all 0.1s ease;
+  .dropzone:hover {
+    border-color: #888;
   }
 
-  :global(label[for='file-upload'].active) {
-    border-color: #4caf50;
-    background-color: #e8f5e9;
-  }
-
-  :global(label[for='file-upload'] p) {
-    margin: 0;
-    font-size: 16px;
-    color: #333333;
-  }
 </style>
+
+<div
+  class="dropzone"
+  on:dragover={handleDragOver}
+  on:drop={handleDrop}
+  on:click={handleClick}
+  on:keydown={(e) => e.key === 'Enter' && handleClick()}
+  role="button"
+  tabindex="0"
+  aria-label="File upload area. Drag & drop an image here, or press Enter to select one."
+>
+  <span>Drag & drop an image here, or click to select one.</span>
+</div>
