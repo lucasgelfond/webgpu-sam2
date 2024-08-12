@@ -52,7 +52,7 @@
       const imageData = ctx.getImageData(0, 0, 1024, 1024);
       // Update inputImageData to notify subscribers
       inputImageData.update((current => imageData));
-      
+
       const rgbData = [];
 
       const mean = [0.485, 0.456, 0.406];
@@ -74,12 +74,9 @@
         return tf.expandDims(transposed, 0);
       });
 
-      const url = isUsingMobileSam
-        ? 'https://sam2-download.b-cdn.net/models/mobilesam.encoder.onnx'
-        : 'https://sam2-download.b-cdn.net/sam2_hiera_small.encoder.with_runtime_opt.ort';
 
       try {
-        const model = await fetchModel(url, 'encoder');
+        const model = await fetchModel({isEncoder: true, modelSize: 'tiny'});
         const session = await ONNX_WEBGPU.InferenceSession.create(model, {
           executionProviders: ['webgpu'],
           graphOptimizationLevel: 'disabled',

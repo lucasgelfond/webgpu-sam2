@@ -74,7 +74,7 @@
     const pointLabels = new ONNX_WEBGPU.Tensor(inputPointLabels, [1, 2]);
 
     try {
-      const decoderModel = await fetchModel(modelURL, 'decoder');
+      const decoderModel = await fetchModel({isEncoder: false, modelSize: 'tiny'});
       const decodingSession = await ONNX_WEBGPU.InferenceSession.create(decoderModel, {
         executionProviders: ['webgpu'],
       });
