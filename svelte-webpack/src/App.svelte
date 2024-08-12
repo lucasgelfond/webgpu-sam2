@@ -1,18 +1,12 @@
 <script>
-  import { onMount } from 'svelte';
   import Encoder from './components/encoder';
   import Decoder from './components/decoder';
   import { currentStatus } from 'src/lib';
-  onMount(() => {
-    const font = new FontFace('UniversLTStd', 'url(/public/fonts/UniversLTStd.woff)');
-    font.load().then(() => {
-      document.fonts.add(font);
-    });
-  });
+
 </script>
 
 <div class="container">
-  <h1>Segment Anything 2, in WebGPU</h1>
+  <h1 style="font-weight: 600;">Segment Anything 2, in WebGPU</h1>
   <!-- TK - send blog post before shipping!-->
   <p>
     Built by <a href="http://lucasgelfond.online">Lucas Gelfond</a>. You can read my writeup
@@ -28,18 +22,15 @@
 </div>
 
 <style>
-  @font-face {
-    font-family: 'UniversLTStd';
-    src: url('/fonts/UniversLTStd.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-  }
+
 
   .current-status {
     font-size: 1.5em;
-    font-weight: bold;
-  }
-
+    font-weight: 500;
+    font-family: 'Univers Lt Std', sans-serif;
+    min-height: 3em;
+    line-height: 1.5em;
+    }  
   .container {
     padding: 100px;
     display: flex;

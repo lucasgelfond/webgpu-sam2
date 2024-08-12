@@ -7,8 +7,6 @@
   let imageElement: HTMLImageElement;
   let droppedFile = null;
 
-  // let size = $modelSize;
-
   function handleDragOver(event) {
     event.preventDefault();
   }
@@ -40,7 +38,7 @@
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (imageElement) {
-        imageElement.onload = async () => await processImage(imageElement, 'small');
+        imageElement.onload = async () => await processImage(imageElement, $modelSize);
         imageElement.src = fileReader.result as string;
       }
     };
@@ -58,35 +56,43 @@
   });
 </script>
 
-{#if !droppedFile}
+<div class="container">
   <div class="model-selection">
     <label for="modelSize">Model Size:</label>
-    <select id="modelSize" bind:value={$modelSize}>
+    <select id="modelSize" bind:value={$modelSize} disabled={!!droppedFile}>
       <option value="tiny">Tiny</option>
       <option value="small">Small</option>
       <option value="base_plus">Base Plus (recommended)</option>
     </select>
   </div>
-  <div
-    class="dropzone"
-    on:dragover={handleDragOver}
-    on:drop={handleDrop}
-    on:click={handleClick}
-    on:keydown={(e) => e.key === 'Enter' && handleClick()}
-    role="button"
-    tabindex="0"
-    aria-label="File upload area. Drag & drop an image here, or press Enter to select one."
-  >
-    <span>Drag & drop an image here, or click to select one.</span>
-  </div>
-{:else}
-  <div>
-    <span><strong>Model Size</strong>: {$modelSize}</span>
-  </div>
-{/if}
+
+  {#if !droppedFile}
+    <div
+      class="dropzone"
+      on:dragover={handleDragOver}
+      on:drop={handleDrop}
+      on:click={handleClick}
+      on:keydown={(e) => e.key === 'Enter' && handleClick()}
+      role="button"
+      tabindex="0"
+      aria-label="File upload area. Drag & drop an image here, or press Enter to select one."
+    >
+      <span>Drag & drop an image here, or click to select one.</span>
+    </div>
+  {/if}
+</div>
+
 <img bind:this={imageElement} alt="Uploaded" style="display: none;" />
 
 <style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 700px;
+    width: 100%;
+  }
+
   .dropzone {
     width: 100%;
     height: 200px;
@@ -101,7 +107,6 @@
     transition: border-color 0.3s ease-in-out;
     cursor: pointer;
     margin-top: 20px;
-    max-width: 700px;
     font-family: 'UniversLTStd', sans-serif;
   }
 
@@ -114,12 +119,13 @@
     flex-direction: row;
     gap: 8px;
     margin-top: 20px;
-    max-width: 700px;
+    width: 100%;
     font-family: 'UniversLTStd', sans-serif;
     align-items: center;
+    height: 40px;
   }
   .model-selection label {
-    font-weight: bold;
+    font-weight: 500;
   }
   .model-selection select {
     border-radius: 5px;

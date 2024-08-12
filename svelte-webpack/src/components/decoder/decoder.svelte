@@ -130,11 +130,12 @@
   <div class="container"></div>
 {:else}
   <div class="container">
-    <div class="threshold-element">
+    <!--- This doesn't work super well, may bring back in later -->
+    <!-- <div class="threshold-element">
       <label class="threshold-label" for="threshold">Mask&nbsp;Threshold:</label>
       <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
       <span>{maskThreshold}</span>
-    </div>
+    </div> -->
     <canvas
       bind:this={canvas}
       on:click={handleClick}
@@ -159,22 +160,14 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 80vh;
+    height: 60vh;
     margin-bottom: 40px;
     gap: 8px;
   }
-  .threshold-label {
-    font-size: 1em;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-  }
+
   canvas {
     width: 100%;
     height: 100%;
   }
-  .threshold-element {
-    width: 100%;
-    text-align: left;
-  }
+
 </style>
