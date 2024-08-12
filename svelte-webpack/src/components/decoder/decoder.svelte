@@ -9,7 +9,7 @@
 
   export let isUsingMobileSam: boolean = false;
   const ORIGINAL_SIZE = 1024;
-  let canvasRef: HTMLCanvasElement;
+  let canvas: HTMLCanvasElement;
   let maskThreshold = 2;
   let canvasSize: number;
   let scale: number;
@@ -19,17 +19,17 @@
     ? 'https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx'
     : 'https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx';
 
-  $: if (canvasRef) {
-    canvasSize = Math.min(canvasRef.width, canvasRef.height);
+  $: if (canvas) {
+    canvasSize = Math.min(canvas.width, canvas.height);
     scale = canvasSize / ORIGINAL_SIZE;
     offset = {
-      x: (canvasRef.width - canvasSize) / 2,
-      y: (canvasRef.height - canvasSize) / 2,
+      x: (canvas.width - canvasSize) / 2,
+      y: (canvas.height - canvasSize) / 2,
     };
-    drawImage(canvasRef, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+    drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
   }
 
-  $: $inputImageData, drawImage(canvasRef, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+  $: $inputImageData, drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
 
   function prepareDecodingInputs(encoderOutputs: any, pointCoords: any, pointLabels: any) {
     const { image_embed, high_res_feats_0, high_res_feats_1 } = encoderOutputs;
@@ -155,9 +155,9 @@
   }
 
   async function handleClick(event: MouseEvent) {
-    if (!canvasRef || !$inputImageData || !$encoderOutput) return;
+    if (!canvas || !$inputImageData || !$encoderOutput) return;
 
-    const rect = canvasRef.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
     const x = (event.clientX - rect.left - offset.x) / scale;
     const y = (event.clientY - rect.top - offset.y) / scale;
 
@@ -166,10 +166,10 @@
       `Clicked on (${x}, ${y}). Downloading the decoder model if needed and generating masks...`,
     );
 
-    const context = canvasRef.getContext('2d');
+    const context = canvas.getContext('2d');
     if (!context) return;
 
-    drawImage(canvasRef, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+    drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
     context.fillStyle = 'rgba(0, 0, 139, 0.7)'; // Dark blue with some transparency
     context.fillRect(x * scale + offset.x - 1, y * scale + offset.y - 1, 2, 2); // Smaller 2x2 pixel
 
@@ -236,18 +236,18 @@
   }
 
   function drawImage(
-    canvasRef: HTMLCanvasElement,
+    canvas: HTMLCanvasElement,
     inputImageData: ImageData,
     originalSize: number,
     canvasSize: number,
     offset: { x: number; y: number }
   ) {
-    if (!canvasRef || !inputImageData) return;
-    const context = canvasRef.getContext('2d');
+    if (!canvas || !inputImageData) return;
+    const context = canvas.getContext('2d');
     if (!context) return;
 
     context.fillStyle = '#f0f0f0';
-    context.fillRect(0, 0, canvasRef.width, canvasRef.height);
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = originalSize;
@@ -261,14 +261,14 @@
   }
 
   onMount(() => {
-    if (!canvasRef) return;
+    if (!canvas) return;
     const resizeObserver = new ResizeObserver(() => {
-      if (canvasRef.parentElement) {
-        canvasRef.width = canvasRef.parentElement.clientWidth;
-        canvasRef.height = canvasRef.parentElement.clientHeight;
+      if (canvas.parentElement) {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
       }
     });
-    resizeObserver.observe(canvasRef.parentElement);
+    resizeObserver.observe(canvas.parentElement);
 
     return () => {
       resizeObserver.disconnect();
@@ -277,7 +277,7 @@
 </script>
 
 <div class="container">
-  <canvas bind:this={canvasRef} on:click={handleClick} />
+  <canvas bind:this={canvas} on:click={handleClick} />
   <div>
     <label for="threshold">Mask Threshold: </label>
     <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
