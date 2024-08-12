@@ -3,10 +3,12 @@
   // @ts-ignore
   import processImage from './utils/process-image/process-image';
   import { currentStatus } from '../../lib/current-status';
-
+  import { modelSize } from '../../lib/model-size';
 
   let imageElement: HTMLImageElement;
   let droppedFile = null;
+
+  // let size = $modelSize;
 
   function handleDragOver(event) {
     event.preventDefault();
@@ -39,7 +41,7 @@
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (imageElement) {
-        imageElement.onload = async () => await processImage(imageElement);
+        imageElement.onload = async () => await processImage(imageElement, 'small');
         imageElement.src = fileReader.result as string;
       }
     };
@@ -58,6 +60,14 @@
 </script>
 
 {#if !droppedFile}
+  <div class="model-selection">
+    <label for="modelSize">Model Size:</label>
+    <select id="modelSize" bind:value={$modelSize}>
+      <option value="tiny">Tiny</option>
+      <option value="small">Small</option>
+      <option value="base_plus">Base Plus</option>
+    </select>
+  </div>
   <div
     class="dropzone"
     on:dragover={handleDragOver}
@@ -69,6 +79,10 @@
     aria-label="File upload area. Drag & drop an image here, or press Enter to select one."
   >
     <span>Drag & drop an image here, or click to select one.</span>
+  </div>
+{:else}
+  <div>
+    <span>Model Size: {$modelSize}</span>
   </div>
 {/if}
 <img bind:this={imageElement} alt="Uploaded" style="display: none;" />
@@ -96,4 +110,22 @@
   .dropzone:hover {
     border-color: #888;
   }
+
+  .model-selection {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 20px;
+    max-width: 700px;
+    font-family: 'UniversLTStd', sans-serif;
+    align-items: center;
+  }
+  .model-selection label {
+    font-weight: bold;
+  }
+  .model-selection select {
+    border-radius: 5px;
+    padding: 5px;
+  }
+
 </style>

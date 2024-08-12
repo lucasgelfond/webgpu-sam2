@@ -9,8 +9,8 @@
   import scaleAndProcessMasks from './utils/scale-and-process-masks';
   import drawContour from './utils/draw-contour';
   import drawMask from './utils/draw-mask';
+  import { modelSize } from 'src/lib/model-size';
 
-  export let isUsingMobileSam: boolean = false;
   const ORIGINAL_SIZE = 1024;
   let canvas: HTMLCanvasElement;
   let maskThreshold = 0;
@@ -19,10 +19,6 @@
   let offset: { x: number; y: number };
   let resizeObserver: ResizeObserver;
   let isClickDisabled = true;
-
-  $: modelURL = isUsingMobileSam
-    ? 'https://sam2-download.b-cdn.net/models/mobilesam.decoder.quant.onnx'
-    : 'https://sam2-download.b-cdn.net/sam2_hiera_small.decoder.onnx';
 
   $: if (canvas && $inputImageData) {
     canvasSize = Math.min(canvas.width, canvas.height);
@@ -88,7 +84,7 @@
     const pointLabels = new ONNX_WEBGPU.Tensor(inputPointLabels, [1, 2]);
 
     try {
-      const decoderModel = await fetchModel({isEncoder: false, modelSize: 'tiny'});
+      const decoderModel = await fetchModel({isEncoder: false, modelSize: 'small'});
       const decodingSession = await ONNX_WEBGPU.InferenceSession.create(decoderModel, {
         executionProviders: ['webgpu'],
       });
