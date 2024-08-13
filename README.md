@@ -10,7 +10,7 @@ To run the webapp, first install dependencies with `npm i` and then run `npm run
 
 ## Acknowledgements
 
-I made heavy use of prior art here. Some of the most help came from [this](https://github.com/microsoft/onnxruntime/issues/20876) recent ONNX Runtime issue about WebGPU support and from [ibaiGorodo](https://github.com/ibaiGorordo/ONNX-SAM2-Segment-Anything)'s repo that implements SAM 2 inference in Python. Many of my steps for handling the model were translation of this into JS. For dealing with the browser, I made heavy use of [web-sam](https://github.com/neka-nat/web-sam) and [SAM-in-Browser](https://github.com/sunu/SAM-in-Browser).
+I made heavy use of prior art here. Some of the most help came from [this](https://github.com/microsoft/onnxruntime/issues/20876) recent ONNX Runtime issue about WebGPU support and from [ibaiGorodo](https://github.com/ibaiGorordo/ONNX-SAM2-Segment-Anything)'s repo that implements SAM 2 inference in Python. Many of my steps for handling the model were translation of this into JS. For dealing with the browser, I owe a great deal to [web-sam](https://github.com/neka-nat/web-sam) and [SAM-in-Browser](https://github.com/sunu/SAM-in-Browser).
 
 In order to get the models to work on the web, I also used [SamExporter](https://github.com/vietanhdev/samexporter). A special thank you, of course, to Cursor and Claude 3.5 Sonnet.
 
