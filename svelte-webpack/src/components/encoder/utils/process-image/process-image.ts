@@ -1,12 +1,19 @@
 // @ts-ignore
 import * as ONNX_WEBGPU from 'onnxruntime-web/webgpu';
 import * as tf from '@tensorflow/tfjs';
-import { encoderOutput, inputImageData, currentStatus, fetchModel } from 'src/lib';
+import {
+  encoderOutput,
+  inputImageData,
+  currentStatus,
+  fetchModel,
+  initialImageDims,
+} from 'src/lib';
 
 const processImage = async (img: HTMLImageElement, modelSize: string) => {
   currentStatus.set(
     `Uploaded image is ${img.width}x${img.height}px. Loading the encoder model (~28 MB).`,
   );
+  initialImageDims.update(() => [img.width, img.height]);
 
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -14,15 +21,20 @@ const processImage = async (img: HTMLImageElement, modelSize: string) => {
   const ctx = canvas.getContext('2d');
 
   if (ctx) {
-    const scale = Math.min(1024 / img.width, 1024 / img.height);
-    const scaledWidth = img.width * scale;
-    const scaledHeight = img.height * scale;
-    const x = (1024 - scaledWidth) / 2;
-    const y = (1024 - scaledHeight) / 2;
+    let sourceX, sourceY, sourceWidth, sourceHeight;
+    if (img.width > img.height) {
+      sourceWidth = img.height;
+      sourceHeight = img.height;
+      sourceX = (img.width - img.height) / 2;
+      sourceY = 0;
+    } else {
+      sourceWidth = img.width;
+      sourceHeight = img.width;
+      sourceX = 0;
+      sourceY = (img.height - img.width) / 2;
+    }
 
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 1024, 1024);
-    ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 1024, 1024);
 
     const imageData = ctx.getImageData(0, 0, 1024, 1024);
     // Update inputImageData to notify subscribers
