@@ -1,6 +1,6 @@
 ### Segment Anything 2 in WebGPU
 
-This repo includes a WebGPU implementation of Facebook Research's model, [Segment Anything 2](<(https://github.com/facebookresearch/segment-anything-2/tree/main)>) using WebGPU. It runs completely client-side, no data is sent to the server! You can also read my [writeup](http://lucasgelfond.online/portfolio/webgpu-sam2) or try a demo at [http://lucasgelfond.online/webgpu-sam2](http://lucasgelfond.online/webgpu-sam2/)
+This repo includes a WebGPU implementation of Facebook Research's model, [Segment Anything 2](<(https://github.com/facebookresearch/segment-anything-2/tree/main)>) using WebGPU. It runs completely client-side, no data is sent to the server! You can also read my [writeup](http://lucasgelfond.online/portfolio/webgpu-sam2) or try a demo at [http://webgpu-sam2.lucasgelfond.online/](http://webgpu-sam2.lucasgelfond.online/)
 
 (Thanks to [Diego Rodriguez](https://x.com/asciidiego?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor) for inspiring this project!)
 
