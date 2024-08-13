@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   // @ts-ignore
   import { processImage } from './utils';
   import { currentStatus, modelSize } from 'src/lib';
@@ -53,15 +52,6 @@
     handleFile(file);
   }
 
-  onMount(() => {
-    const font = new FontFace('UniversLTStd', 'url(/public/fonts/UniversLTStd.woff)');
-    font.load().then(() => {
-      document.fonts.add(font);
-    });
-    if (imageElement) {
-      imageElement.style.display = 'none';
-    }
-  });
 </script>
 
 <div class="container">

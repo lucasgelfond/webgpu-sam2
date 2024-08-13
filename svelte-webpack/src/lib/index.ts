@@ -4,5 +4,6 @@ import fetchModel from './fetch-model';
 import inputImageData from './input-image-data';
 import modelSize from './model-size';
 import { encoderOutput } from './encoder-output';
+import { initialImageDims } from './initial-image-dims';
 
-export { currentStatus, fetchModel, inputImageData, modelSize, encoderOutput };
+export { currentStatus, fetchModel, inputImageData, modelSize, encoderOutput, initialImageDims };

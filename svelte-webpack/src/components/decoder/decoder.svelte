@@ -129,7 +129,7 @@
 {#if !$inputImageData}
   <div class="container"></div>
 {:else}
-  <div class="container">
+  <div class="container-loaded">
     <div class="threshold-element">
       <label class="threshold-label" for="threshold">Mask&nbsp;Threshold:</label>
       <input type="range" id="threshold" min="0" max="20" step="0.1" bind:value={maskThreshold} />
@@ -159,7 +159,15 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
+    margin-bottom: 40px;
+    gap: 8px;
+  }
+  .container-loaded {
     height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
     margin-bottom: 40px;
     gap: 8px;
   }
