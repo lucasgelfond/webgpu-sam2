@@ -27,7 +27,7 @@
       x: (canvas.width - canvasSize) / 2,
       y: (canvas.height - canvasSize) / 2,
     };
-    drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+    drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize);
 
     if (!resizeObserver) {
       resizeObserver = new ResizeObserver(() => {
@@ -40,7 +40,7 @@
     }
   }
 
-  $: $inputImageData, drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+  $: $inputImageData, drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize);
 
   $: if ($encoderOutput) {
     isClickDisabled = false;
@@ -61,7 +61,7 @@
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize, offset);
+    drawImage(canvas, $inputImageData, ORIGINAL_SIZE, canvasSize);
     context.fillStyle = 'rgba(0, 0, 139, 0.7)'; // Dark blue with some transparency
     context.fillRect(x * scale + offset.x - 1, y * scale + offset.y - 1, 2, 2); // Smaller 2x2 pixel
 
