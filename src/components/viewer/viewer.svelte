@@ -76,9 +76,21 @@
   $: prepareModels($modelSize);
   // Nothing can be opened until the selected model is downloaded.
   $: ready = !!$modelProgress?.ready;
+  $: loaded = $modelProgress?.loaded ?? 0;
+  $: total = $modelProgress?.total ?? 0;
+  // Once the bytes are in, the WebGPU session still takes a few seconds to build.
+  $: downloaded = total > 0 && loaded >= total;
+  $: modelLabel = MODELS.find((model) => model.value === $modelSize).label;
   $: progressLabel = $modelProgress?.error
-    ? `Couldn't download the model: ${$modelProgress.error}`
-    : `Downloading the ${MODELS.find((model) => model.value === $modelSize).label} model · ${formatMB($modelProgress?.loaded ?? 0)} of ${formatMB($modelProgress?.total ?? 0)} (cached after the first visit)`;
+    ? `Couldn't load the model: ${$modelProgress.error}`
+    : downloaded
+      ? `Preparing the ${modelLabel} model…`
+      : `Downloading the ${modelLabel} model · ${formatMB(loaded)} of ${formatMB(total)}`;
+  $: shortProgressLabel = $modelProgress?.error
+    ? "Couldn't load the model"
+    : downloaded
+      ? 'Preparing…'
+      : `${formatMB(loaded)} / ${formatMB(total)}`;
 
   $: if (video && ($source !== loadedSource || $modelSize !== loadedModelSize)) {
     loadSource($source);
@@ -91,15 +103,17 @@
     embedding = null;
     embeddingKey = null;
     fps = 0;
+    processing = false;
+    drag = null;
     stopFrameLoop();
     video.srcObject = next?.kind === 'camera' ? next.stream : null;
     if (next?.kind === 'video') video.src = next.url;
     else video.removeAttribute('src');
-    if (!next) return render();
+    render(); // wipes the previous image and mask off the canvas
+    if (!next) return;
 
     if (next.kind === 'image') {
       embeddingKey = 0;
-      render();
       refine(true, 'Embedding the image. ');
     } else {
       frameHandle = video.requestVideoFrameCallback(onVideoFrame);
@@ -179,8 +193,8 @@
 
   // Moves the selection onto the current frame: encode it, then prompt the decoder with the
   // previous mask's padded bounding box. Returns false if the object is lost.
-  async function propagate() {
-    const current = generation;
+  async function propagate(current: number) {
+    if (current !== generation) return false;
     const bounds = maskLogits && maskBounds(maskLogits, INPUT_SIZE);
     if (!bounds) {
       setMask(null);
@@ -337,7 +351,7 @@
     for (let i = 1; i <= total && processing && current === generation; i++) {
       progress = `${i}/${total}`;
       await seek(startTime + i / VIDEO_SAMPLE_FPS);
-      if (!(await exclusive(propagate))) break;
+      if (!(await exclusive(() => propagate(current)))) break;
       tracked.set(sampleIndex(video.currentTime), maskLogits);
     }
     processing = false;
@@ -365,7 +379,8 @@
 
   async function liveStep(start: number) {
     lastStepStart = start;
-    await exclusive(propagate);
+    const current = generation;
+    await exclusive(() => propagate(current));
     const end = performance.now();
     stepMs = end - start;
     if (lastStepEnd) fps = 1000 / (end - lastStepEnd);
@@ -405,7 +420,7 @@
     </label>
     {#if $source}
       {#if !ready}
-        <span class="meta">{progressLabel}</span>
+        <span class="meta loading" title={progressLabel}>{shortProgressLabel}</span>
       {/if}
       <button on:click={() => fileInput.click()} disabled={!ready}>Open file</button>
       {#if $source.kind !== 'camera'}
@@ -442,7 +457,12 @@
           <span>Drop an image or video here</span>
         {:else}
           <span>{progressLabel}</span>
-          <progress max={$modelProgress?.total} value={$modelProgress?.loaded} />
+          {#if downloaded}
+            <progress />
+          {:else}
+            <progress max={total} value={loaded} />
+          {/if}
+          <span class="meta">Saved in your browser after the first visit.</span>
         {/if}
         <div class="actions">
           <button on:click|stopPropagation={() => fileInput.click()} disabled={!ready}>
@@ -569,6 +589,27 @@
   }
   progress::-moz-progress-bar {
     background: var(--accent);
+  }
+  progress:indeterminate {
+    background: linear-gradient(90deg, var(--border) 30%, var(--accent) 50%, var(--border) 70%) 0 0 / 300% 100%;
+    animation: sweep 1.4s linear infinite;
+  }
+  progress:indeterminate::-webkit-progress-bar {
+    background: transparent;
+  }
+  @keyframes sweep {
+    to {
+      background-position: -150% 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    progress:indeterminate {
+      animation: none;
+    }
+  }
+  .loading {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
   .drop-overlay {
     pointer-events: none;
