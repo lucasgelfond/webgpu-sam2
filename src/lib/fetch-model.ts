@@ -1,4 +1,4 @@
-import { currentStatus } from 'src/lib';
+import currentStatus from './current-status';
 
 const BASE_URL = 'https://sam2-model-download.b-cdn.net';
 
@@ -22,7 +22,7 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
   // Look in origin private file system.
   try {
     const root = await navigator.storage.getDirectory();
-    const modelFile = await root.getFileHandle(modelName, { create: false });
+    const modelFile = await root.getFileHandle(`${modelName}-${modelSize}`, { create: false });
     cachedModel = await modelFile.getFile();
     console.log(`Found cached ${modelName}-${modelSize} model`);
   } catch (error) {
@@ -47,7 +47,7 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
 
     try {
       const root = await navigator.storage.getDirectory();
-      const modelFile = await root.getFileHandle(modelName, { create: true });
+      const modelFile = await root.getFileHandle(`${modelName}-${modelSize}`, { create: true });
       const writable = await modelFile.createWritable();
       await writable.write(fetchedModel);
       await writable.close();

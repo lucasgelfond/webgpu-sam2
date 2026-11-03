@@ -259,3 +259,50 @@
     local('Univers LT Std 85 Extra Black Oblique'),
     url('/public/fonts/UniversLTStd-XBlackObl.woff') format('woff');
 }
+
+:root {
+  --text: #1a1a1a;
+  --muted: #6b6b6b;
+  --border: #d4d4d4;
+  --surface: #ececec;
+  --background: #f7f7f7;
+  --accent: rgb(30, 100, 255);
+  --accent-wash: rgba(30, 100, 255, 0.06);
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+}
+
+button,
+select {
+  font: inherit;
+  font-size: 0.875rem;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 150ms ease-out;
+}
+
+button:hover:not(:disabled),
+select:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button:focus-visible,
+select:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

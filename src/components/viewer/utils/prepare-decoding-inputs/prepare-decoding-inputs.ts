@@ -34,10 +34,12 @@ function prepareDecodingInputs(
     high_res_feats_1,
     point_coords: new ONNX_WEBGPU.Tensor(new Float32Array(coords), [1, labels.length, 2]),
     point_labels: new ONNX_WEBGPU.Tensor(new Float32Array(labels), [1, labels.length]),
-    mask_input: new ONNX_WEBGPU.Tensor(
-      previousMask ?? new Float32Array(MASK_SIZE * MASK_SIZE),
-      [1, 1, MASK_SIZE, MASK_SIZE],
-    ),
+    mask_input: new ONNX_WEBGPU.Tensor(previousMask ?? new Float32Array(MASK_SIZE * MASK_SIZE), [
+      1,
+      1,
+      MASK_SIZE,
+      MASK_SIZE,
+    ]),
     has_mask_input: new ONNX_WEBGPU.Tensor(new Float32Array([previousMask ? 1 : 0]), [1]),
   };
 }
