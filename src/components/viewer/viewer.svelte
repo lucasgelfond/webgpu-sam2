@@ -4,9 +4,13 @@
     INPUT_SIZE,
     currentStatus,
     encode,
+    MODELS,
+    formatMB,
     getSession,
     loadFile,
+    modelProgress,
     modelSize,
+    prepareModels,
     source,
     useDemoImage,
     useWebcam,
@@ -68,6 +72,13 @@
   let lastStepStart = 0;
   let lastStepEnd = 0;
   let frameHandle: number | null = null;
+
+  $: prepareModels($modelSize);
+  // Nothing can be opened until the selected model is downloaded.
+  $: ready = !!$modelProgress?.ready;
+  $: progressLabel = $modelProgress?.error
+    ? `Couldn't download the model: ${$modelProgress.error}`
+    : `Downloading the ${MODELS.find((model) => model.value === $modelSize).label} model · ${formatMB($modelProgress?.loaded ?? 0)} of ${formatMB($modelProgress?.total ?? 0)} (cached after the first visit)`;
 
   $: if (video && ($source !== loadedSource || $modelSize !== loadedModelSize)) {
     loadSource($source);
@@ -258,6 +269,7 @@
 
   function handleDrop(event: DragEvent) {
     dragging = false;
+    if (!ready) return;
     const file = event.dataTransfer?.files[0];
     if (file) loadFile(file);
   }
@@ -384,15 +396,20 @@
     <label>
       Model
       <select bind:value={$modelSize}>
-        <option value="tiny">Tiny (fastest, best for video)</option>
-        <option value="small">Small</option>
-        <option value="base_plus">Base Plus (most accurate)</option>
+        {#each MODELS as model}
+          <option value={model.value}>
+            {model.label} · {formatMB(model.bytes)}{model.note ? ` (${model.note})` : ''}
+          </option>
+        {/each}
       </select>
     </label>
     {#if $source}
-      <button on:click={() => fileInput.click()}>Open file</button>
+      {#if !ready}
+        <span class="meta">{progressLabel}</span>
+      {/if}
+      <button on:click={() => fileInput.click()} disabled={!ready}>Open file</button>
       {#if $source.kind !== 'camera'}
-        <button on:click={useWebcam}>Use webcam</button>
+        <button on:click={useWebcam} disabled={!ready}>Use webcam</button>
       {/if}
     {/if}
   </div>
@@ -420,15 +437,24 @@
     {#if !$source}
       <!-- Clicking anywhere opens the picker; keyboard users get the "Choose a file" button. -->
       <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-      <div class="dropzone" on:click={() => fileInput.click()}>
-        <span>Drop an image or video here</span>
+      <div class="dropzone" class:disabled={!ready} on:click={() => ready && fileInput.click()}>
+        {#if ready}
+          <span>Drop an image or video here</span>
+        {:else}
+          <span>{progressLabel}</span>
+          <progress max={$modelProgress?.total} value={$modelProgress?.loaded} />
+        {/if}
         <div class="actions">
-          <button on:click|stopPropagation={() => fileInput.click()}>Choose a file</button>
-          <button on:click|stopPropagation={useWebcam}>Use webcam</button>
-          <button on:click|stopPropagation={useDemoImage}>Try the demo image</button>
+          <button on:click|stopPropagation={() => fileInput.click()} disabled={!ready}>
+            Choose a file
+          </button>
+          <button on:click|stopPropagation={useWebcam} disabled={!ready}>Use webcam</button>
+          <button on:click|stopPropagation={useDemoImage} disabled={!ready}>
+            Try the demo image
+          </button>
         </div>
       </div>
-    {:else if dragging}
+    {:else if dragging && ready}
       <div class="drop-overlay">Drop to replace</div>
     {/if}
   </div>
@@ -503,8 +529,8 @@
     box-sizing: border-box;
     transition: border-color 150ms ease-out, background-color 150ms ease-out;
   }
-  .stage.empty:hover,
-  .stage.empty.dragging {
+  .stage.empty:hover:has(.dropzone:not(.disabled)),
+  .stage.empty.dragging:has(.dropzone:not(.disabled)) {
     border-color: var(--accent);
     background: var(--accent-wash);
   }
@@ -521,6 +547,28 @@
   }
   .dropzone {
     cursor: pointer;
+  }
+  .dropzone.disabled {
+    cursor: default;
+  }
+  progress {
+    width: min(320px, 60%);
+    height: 4px;
+    appearance: none;
+    border: none;
+    border-radius: 2px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  progress::-webkit-progress-bar {
+    background: var(--border);
+  }
+  progress::-webkit-progress-value {
+    background: var(--accent);
+    transition: width 150ms linear;
+  }
+  progress::-moz-progress-bar {
+    background: var(--accent);
   }
   .drop-overlay {
     pointer-events: none;

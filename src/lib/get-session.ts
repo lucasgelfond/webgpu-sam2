@@ -4,11 +4,13 @@ import fetchModel from './fetch-model';
 
 const sessions = new Map<string, Promise<any>>();
 
+type Options = { isEncoder: boolean; modelSize: string; onProgress?: (loaded: number) => void };
+
 // Creating an InferenceSession is expensive, so each model is loaded once and reused.
-function getSession({ isEncoder, modelSize }: { isEncoder: boolean; modelSize: string }) {
+function getSession({ isEncoder, modelSize, onProgress }: Options) {
   const key = `${isEncoder ? 'encoder' : 'decoder'}-${modelSize}`;
   if (!sessions.has(key)) {
-    const session = fetchModel({ isEncoder, modelSize }).then((model) =>
+    const session = fetchModel({ isEncoder, modelSize, onProgress }).then((model) =>
       ONNX_WEBGPU.InferenceSession.create(model, {
         executionProviders: ['webgpu'],
         ...(isEncoder && { graphOptimizationLevel: 'disabled' }),
