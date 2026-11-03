@@ -527,6 +527,9 @@
     align-items: center;
     gap: 8px;
   }
+  .toolbar button {
+    white-space: nowrap;
+  }
   .toolbar label {
     display: flex;
     align-items: center;
