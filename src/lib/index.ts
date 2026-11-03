@@ -1,9 +1,25 @@
-// place files you want to import through the `$lib` alias in this folder.
 import currentStatus from './current-status';
-import fetchModel from './fetch-model';
-import inputImageData from './input-image-data';
-import modelSize from './model-size';
-import { encoderOutput } from './encoder-output';
-import { initialImageDims } from './initial-image-dims';
+import encode, { INPUT_SIZE } from './encode';
+import getSession from './get-session';
+import modelSize, { MODELS, formatMB } from './model-size';
+import { modelProgress, prepareModels } from './model-progress';
+import { loadFile, useDemoImage, useWebcam } from './load-source';
+import { setSource, source, type Source } from './source';
 
-export { currentStatus, fetchModel, inputImageData, modelSize, encoderOutput, initialImageDims };
+export {
+  INPUT_SIZE,
+  MODELS,
+  currentStatus,
+  encode,
+  formatMB,
+  getSession,
+  loadFile,
+  modelProgress,
+  modelSize,
+  prepareModels,
+  setSource,
+  source,
+  useDemoImage,
+  useWebcam,
+};
+export type { Source };

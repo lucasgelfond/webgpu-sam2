@@ -1,4 +1,4 @@
 import { writable } from 'svelte/store';
 
-const currentStatus = writable<string>('Upload an image to get started.');
+const currentStatus = writable<string>('Open an image, a video, or your webcam to get started.');
 export default currentStatus;

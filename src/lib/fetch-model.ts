@@ -1,5 +1,3 @@
-import { currentStatus } from 'src/lib';
-
 const BASE_URL = 'https://sam2-model-download.b-cdn.net';
 
 const TINY = 'sam2_hiera_tiny';
@@ -8,21 +6,26 @@ const BASE_PLUS = 'sam2_hiera_base_plus';
 const ENCODER_END = 'encoder.with_runtime_opt.ort';
 const DECODER_END = 'decoder.onnx';
 
-async function fetchModel({ isEncoder, modelSize }) {
+type Options = { isEncoder: boolean; modelSize: string; onProgress?: (loaded: number) => void };
+
+async function fetchModel({ isEncoder, modelSize, onProgress }: Options) {
   const modelName = `${isEncoder ? 'encoder' : 'decoder'}`;
-  const model = await fetchCachedModel(modelName, modelSize);
+  const model = await fetchCachedModel(modelName, modelSize, onProgress);
   return model;
 }
 
 // Check origin private file system to see if we have model - if not, fetch from internet
-async function fetchCachedModel(modelName: string, modelSize: string) {
-  currentStatus.set(`Getting ${modelName}-${modelSize} model...`);
+async function fetchCachedModel(
+  modelName: string,
+  modelSize: string,
+  onProgress?: (loaded: number) => void,
+) {
   let cachedModel;
 
   // Look in origin private file system.
   try {
     const root = await navigator.storage.getDirectory();
-    const modelFile = await root.getFileHandle(modelName, { create: false });
+    const modelFile = await root.getFileHandle(`${modelName}-${modelSize}`, { create: false });
     cachedModel = await modelFile.getFile();
     console.log(`Found cached ${modelName}-${modelSize} model`);
   } catch (error) {
@@ -43,11 +46,12 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
       modelURL,
       // i.e. decoder-tiny
       `${modelName}-${modelSize}`,
+      onProgress,
     );
 
     try {
       const root = await navigator.storage.getDirectory();
-      const modelFile = await root.getFileHandle(modelName, { create: true });
+      const modelFile = await root.getFileHandle(`${modelName}-${modelSize}`, { create: true });
       const writable = await modelFile.createWritable();
       await writable.write(fetchedModel);
       await writable.close();
@@ -60,7 +64,11 @@ async function fetchCachedModel(modelName: string, modelSize: string) {
   }
 }
 
-async function fetchModelFromInternet(modelURL: string, modelName: string) {
+async function fetchModelFromInternet(
+  modelURL: string,
+  modelName: string,
+  onProgress?: (loaded: number) => void,
+) {
   console.log(`Fetching ${modelName} model..."`);
   const response = await fetch(modelURL, {
     method: 'GET',
@@ -89,12 +97,7 @@ async function fetchModelFromInternet(modelURL: string, modelName: string) {
 
     buffer.set(value, receivedLength);
     receivedLength += value.length;
-
-    // Download progress indicator
-
-    // TK - progress indicator for models > 100mb
-    // const percentComplete = (receivedLength / totalSize) * 100;
-    // currentStatus.set(`Fetching ${modelName} model, ${percentComplete.toFixed(2)}%`);
+    onProgress?.(receivedLength);
   }
 
   const blob = new Blob([buffer], { type: 'application/octet-stream' });

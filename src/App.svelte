@@ -1,6 +1,5 @@
 <script>
-  import Encoder from './components/encoder';
-  import Decoder from './components/decoder';
+  import Viewer from './components/viewer';
   import { currentStatus } from 'src/lib';
 
 </script>
@@ -24,8 +23,7 @@
 
     </p>
 
-    <Encoder />
-    <Decoder />
+    <Viewer />
   </div>
 </div>
 
@@ -36,7 +34,7 @@
     font-size: 1.5em;
     font-weight: 500;
     font-family: 'Univers Lt Std', sans-serif;
-    min-height: 2em;
+    min-height: 3em;
     line-height: 1.5em;
 
     }  

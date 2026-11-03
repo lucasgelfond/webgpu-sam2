@@ -45,10 +45,8 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
-    "@tensorflow/tfjs": "^4.20.0",
     "onnxruntime-web": "^1.19.0-dev.20240801-4b8f6dcbb6",
-    "serve": "^14.2.1",
-    "svelte-file-dropzone": "^2.0.7"
+    "serve": "^14.2.1"
   },
   "browserslist": [
     "defaults"
